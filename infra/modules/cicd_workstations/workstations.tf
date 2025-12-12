@@ -100,6 +100,23 @@ resource "google_workstations_workstation_config" "config" {
           enable_integrity_monitoring = shielded_instance_config.value.enable_integrity_monitoring
         }
       }
+      dynamic "boost_configs" {
+        for_each = coalesce(each.value.boost_configs, [])
+        content {
+          id                           = boost_configs.value.id
+          machine_type                 = boost_configs.value.machine_type
+          boot_disk_size_gb            = boost_configs.value.boot_disk_size_gb
+          enable_nested_virtualization = boost_configs.value.enable_nested_virtualization
+          pool_size                    = boost_configs.value.pool_size
+          dynamic "accelerators" {
+            for_each = coalesce(boost_configs.value.accelerators, [])
+            content {
+              type  = accelerators.value.type
+              count = accelerators.value.count
+            }
+          }
+        }
+      }
     }
   }
   persistent_directories {
