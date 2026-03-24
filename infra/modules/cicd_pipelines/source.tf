@@ -133,7 +133,7 @@ resource "google_secret_manager_secret_iam_policy" "policy" {
 }
 
 resource "google_secure_source_manager_hook" "cicd_foundation" {
-  for_each = { for k, v in google_cloudbuild_trigger.ci_pipeline : k => v if local.source.ssm && local.ci_apps_flags[k].is_webhook_trigger }
+  for_each = { for k, v in local.ci_apps_flags : k => google_cloudbuild_trigger.ci_pipeline[k] if local.source.ssm && v.is_webhook_trigger }
 
   project       = google_secure_source_manager_repository.cicd_foundation[0].project
   hook_id       = each.value.name
