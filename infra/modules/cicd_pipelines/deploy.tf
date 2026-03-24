@@ -130,7 +130,7 @@ resource "google_clouddeploy_delivery_pipeline" "continuous_delivery" {
           }
         }
         dynamic "strategy" {
-          for_each = each.value.canary_percentages == null ? [0] : [1]
+          for_each = var.stages[stages.value].canary_percentages == null ? [] : [0]
 
           content {
             canary {
@@ -145,8 +145,8 @@ resource "google_clouddeploy_delivery_pipeline" "continuous_delivery" {
                 }
               }
               canary_deployment {
-                percentages = each.value.canary_percentages
-                verify      = each.value.canary_verify
+                percentages = var.stages[stages.value].canary_percentages
+                verify      = var.stages[stages.value].canary_verify
               }
             }
           }
