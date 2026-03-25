@@ -48,17 +48,49 @@ project_id = "YOUR_PROJECT_ID"
 # Optional: The name of the Secure Source Manager repository. Defaults to "cicd-foundation".
 #secure_source_manager_repo_name = "YOUR_SSM_REPO_NAME"
 
-# Optional: The URL of a Git repository to clone into the new Secure Source Manager repository. If null, cloning is skipped. Defaults to "https://github.com/GoogleCloudPlatform/cloud-workstations-custom-image-examples.git".
-#secure_source_manager_repo_git_url_to_clone = "https://github.com/GoogleCloudPlatform/cloud-workstations-custom-image-examples.git"
+# Optional: The URL of a Git repository to clone into the new Secure Source Manager repository. If null, cloning is skipped. Defaults to f"https://github.com/GoogleCloudPlatform/cloud-workstations-custom-image-examples.git".
+#secure_source_manager_repo_git_url_to_clone = "https://github.com/GoogleCloudPlatform/horizon-sdv.git"
 
 # Optional: The Secure Source Manager (SSM) branch that triggers Cloud Build on push. Defaults to "main".
 #git_branch_trigger = "dev"
 
-# Cloud Workstations
+# Custom images for Cloud Workstations
+cws_custom_images = {
+  # Custom Cloud Workstation Image with Antigravity
+  "antigravity" : {
+    build = {
+      skaffold_path = "workloads/cloud-workstations/pipelines/workstation-images/antigravity"
+      timeout_seconds = 7200
+      machine_type    = "E2_HIGHCPU_32"
+    }
+  },
+  # Custom Cloud Workstation Images for Android Development
+  "android-studio" : {
+    build = {
+      skaffold_path = "workloads/cloud-workstations/pipelines/workstation-images/horizon-android-studio"
+      timeout_seconds = 7200
+      machine_type    = "E2_HIGHCPU_32"
+    }
+  },
+  "android-studio-for-platform" : {
+    build = {
+      skaffold_path = "workloads/cloud-workstations/pipelines/workstation-images/horizon-asfp"
+      timeout_seconds = 7200
+      machine_type    = "E2_HIGHCPU_32"
+    }
+  },
+  "code-oss" : {
+    build = {
+      skaffold_path = "workloads/cloud-workstations/pipelines/workstation-images/horizon-code-oss"
+      timeout_seconds = 7200
+      machine_type    = "E2_HIGHCPU_32"
+    }
+  },
+}
 
 # Cloud Workstations Clusters
 cws_clusters = {
-  "android" = {
+  "workstations" = {
     network    = "workstations"  # cf. vpc_name
     region     = "us-central1"   # cf. vpc_region
     subnetwork = "primary"       # cf. subnet_name
@@ -67,7 +99,25 @@ cws_clusters = {
 
 # Cloud Workstations Configs
 cws_configs = {
-  "default" = {
+  "custom" = {
+    boot_disk_size_gb              = 64
+    creators                       = [
+    ]
+    custom_image_names             = [
+      "antigravity",
+    ]
+    cws_cluster                    = "workstations"
+    #disable_public_ip_addresses    = true  # Defaults to false
+    enable_nested_virtualization   = false
+    idle_timeout_seconds           = 3600
+    machine_type                   = "e2-standard-8"
+    persistent_disk_fs_type        = "ext4"
+    #persistent_disk_reclaim_policy = "DELETE" # Defaults to "RETAIN"
+    persistent_disk_size_gb        = 500
+    persistent_disk_type           = "pd-balanced"
+    #pool_size                      = 1
+  },
+  "android" = {
     #accelerators = [
     #  {
     #    type  = "nvidia-tesla-t4"
@@ -96,11 +146,10 @@ cws_configs = {
       "android-studio-for-platform",
       "code-oss",
     ]
-    cws_cluster = "android"
-    #disable_public_ip_addresses = false  # Defaults to false
+    cws_cluster = "workstations"
+    #disable_public_ip_addresses = true  # Defaults to false
     #enable_nested_virtualization = false  # Defaults to true
     #idle_timeout_seconds = 1800  # Defaults to 3600
-    #image = "us-central1-docker.pkg.dev/cloud-workstations-images/predefined/code-oss:latest"  # Defaults to null
     #instances = [
     #  {
     #    name  = "user1-ws"
@@ -121,39 +170,12 @@ cws_configs = {
   },
 }
 
-# Custom images for Cloud Workstations
-cws_custom_images = {
-  "android-studio" : {
-    build = {
-      skaffold_path   = "examples/images/android/android-studio"
-      timeout_seconds = 7200
-      machine_type    = "E2_HIGHCPU_32"
-    }
-  },
-  "android-studio-for-platform" : {
-    build = {
-      skaffold_path   = "examples/images/android-open-source-project/android-studio-for-platform"
-      timeout_seconds = 7200
-      machine_type    = "E2_HIGHCPU_32"
-    }
-  },
-  "code-oss" : {
-    build = {
-      skaffold_path   = "examples/images/android-open-source-project/code-oss"
-      timeout_seconds = 7200
-      machine_type    = "E2_HIGHCPU_32"
-    }
-  },
-}
-
 ## Android Platform Development
-
 android_branches = [
   #"main",
   #"feature2",
   #"user3",
 ]
-
 android_targets = {
   #"x86-userdebug" : "aosp_cf_x86_64_phone-trunk_staging-userdebug",
   #"arm64-eng" : "aosp_cf_x86_64_phone-trunk_staging-eng",
