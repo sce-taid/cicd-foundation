@@ -368,20 +368,20 @@ variable "cloud_build_service_account_name" {
 
 variable "docker_image_tag" {
   type        = string
-  description = "The tag of the Docker container image to use in build steps."
+  description = "The tag of the gcr.io/cloud-builders/docker image to use."
   default     = "20.10.24"
 }
 
 variable "gcloud_image_tag" {
   type        = string
   description = "The tag of the gcr.io/google.com/cloudsdktool/cloud-sdk image to use."
-  default     = "490.0.0"
+  default     = "562.0.0"
 }
 
 variable "skaffold_image_tag" {
   type        = string
   description = "The tag of the gcr.io/k8s-skaffold/skaffold image to use."
-  default     = "v2.13.2-lts"
+  default     = "v2.18.1"
 }
 
 variable "skaffold_output" {
