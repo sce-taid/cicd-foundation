@@ -90,10 +90,11 @@ cws_custom_images = {
 
 # Cloud Workstations Clusters
 cws_clusters = {
-  "workstations" = {
-    network    = "workstations"  # cf. vpc_name
-    region     = "us-central1"   # cf. vpc_region
-    subnetwork = "primary"       # cf. subnet_name
+  "workstations"  = {
+    network     = "workstations"         # cf. vpc_name
+    region      = "us-central1"          # cf. vpc_region
+    subnetwork  = "primary"              # cf. subnet_name
+    #vpc_project = "your-host-project-id" # for shared-VPC
     #domain_config = {
     #  domain = "workstations.example.com"
     #}
@@ -173,6 +174,11 @@ cws_configs = {
     #persistent_disk_source_snapshot = null  # Defaults to null
     persistent_disk_type = "pd-ssd"
     #pool_size = 1  # Defaults to 0
+    #shielded_instance_config = {            # Defaults to null
+    #  enable_secure_boot          = false   # Defaults to true within shielded_instance_config
+    #  enable_vtpm                 = false   # Defaults to true within shielded_instance_config
+    #  enable_integrity_monitoring = false   # Defaults to true within shielded_instance_config
+    #}
   },
 }
 

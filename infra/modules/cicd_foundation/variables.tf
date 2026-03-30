@@ -535,6 +535,7 @@ variable "cws_clusters" {
     network    = string
     region     = string
     subnetwork = string
+    vpc_project = optional(string)
     domain_config = optional(object({
       domain = string
     }))
