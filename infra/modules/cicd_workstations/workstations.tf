@@ -13,10 +13,24 @@
 # limitations under the License.
 
 locals {
+  # Reconstruct the clusters map with fully qualified paths for network and subnetwork.
+  cws_clusters = {
+    for k, v in var.cws_clusters : k => merge(v, {
+      network    = "projects/${coalesce(v.vpc_project, data.google_project.project.project_id)}/global/networks/${v.network}"
+      subnetwork = "projects/${coalesce(v.vpc_project, data.google_project.project.project_id)}/regions/${v.region}/subnetworks/${v.subnetwork}"
+    })
+  }
+  # Map each config key to its corresponding Cloud Workstation Cluster resource.
+  config_to_cluster_map = {
+    for config_key, config_value in var.cws_configs : config_key =>
+    google_workstations_workstation_cluster.cluster[config_value.cws_cluster]
+  }
+  # Filter configurations to only those that have a list of creators.
   configs_with_creators = {
     for key, config in var.cws_configs : key => config
     if length(coalesce(config.creators, [])) > 0
   }
+  # Flatten the nested list of instances across all configurations into a single map for easier iteration.
   workstation_map = {
     for item in flatten([
       for config_key, config_value in var.cws_configs : [
@@ -30,24 +44,35 @@ locals {
       ]
     ]) : item.resource_key => item
   }
-  # Map each config key to its corresponding Cloud Workstation Cluster resource.
-  config_to_cluster_map = {
-    for config_key, config_value in var.cws_configs : config_key =>
-    google_workstations_workstation_cluster.cluster[config_value.cws_cluster]
-  }
 }
 
 # Cloud Workstation Clusters
 resource "google_workstations_workstation_cluster" "cluster" {
-  for_each = var.cws_clusters
+  for_each = local.cws_clusters
   provider = google-beta
 
   project                = data.google_project.project.project_id
   workstation_cluster_id = each.key
-  network                = "projects/${data.google_project.project.project_id}/global/networks/${each.value.network}"
-  subnetwork             = "projects/${data.google_project.project.project_id}/regions/${each.value.region}/subnetworks/${each.value.subnetwork}"
+  network                = each.value.network
+  subnetwork             = each.value.subnetwork
   location               = each.value.region
   labels                 = local.common_labels
+
+  dynamic "domain_config" {
+    for_each = each.value.domain_config != null ? [each.value.domain_config] : []
+
+    content {
+      domain = domain_config.value.domain
+    }
+  }
+
+  dynamic "private_cluster_config" {
+    for_each = each.value.private_cluster_config != null ? [each.value.private_cluster_config] : []
+
+    content {
+      enable_private_endpoint = private_cluster_config.value.enable_private_endpoint
+    }
+  }
 
   lifecycle {
     ignore_changes = [
@@ -102,6 +127,7 @@ resource "google_workstations_workstation_config" "config" {
       }
       dynamic "boost_configs" {
         for_each = coalesce(each.value.boost_configs, [])
+
         content {
           id                           = boost_configs.value.id
           machine_type                 = boost_configs.value.machine_type
@@ -110,6 +136,7 @@ resource "google_workstations_workstation_config" "config" {
           pool_size                    = boost_configs.value.pool_size
           dynamic "accelerators" {
             for_each = coalesce(boost_configs.value.accelerators, [])
+
             content {
               type  = accelerators.value.type
               count = accelerators.value.count

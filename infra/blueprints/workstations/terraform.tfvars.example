@@ -94,6 +94,12 @@ cws_clusters = {
     network    = "workstations"  # cf. vpc_name
     region     = "us-central1"   # cf. vpc_region
     subnetwork = "primary"       # cf. subnet_name
+    #domain_config = {
+    #  domain = "workstations.example.com"
+    #}
+    #private_cluster_config = {
+    #  enable_private_endpoint = true  # Defaults to false
+    #}
   }
 }
 

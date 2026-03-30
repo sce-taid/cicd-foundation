@@ -28,6 +28,11 @@ output "cloud_build_trigger_trigger_ids" {
   value       = length(local.all_apps) > 0 ? module.cicd_pipelines[0].cloud_build_trigger_trigger_id : {}
 }
 
+output "cws_clusters" {
+  description = "A map of Cloud Workstation clusters, with their IDs and other attributes."
+  value       = module.workstations.cws_clusters
+}
+
 output "secure_source_manager_instance_git_http" {
   description = "The Git HTTP URI of the created Secure Source Manager instance."
   value       = length(local.all_apps) > 0 ? module.cicd_pipelines[0].secure_source_manager_instance_git_http : null

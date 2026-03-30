@@ -18,10 +18,11 @@ output "cws_clusters" {
   value = {
     for key, cluster in google_workstations_workstation_cluster.cluster :
     key => {
-      id         = cluster.id
-      network    = cluster.network
-      subnetwork = cluster.subnetwork
-      location   = cluster.location
+      id                     = cluster.id
+      network                = cluster.network
+      subnetwork             = cluster.subnetwork
+      location               = cluster.location
+      private_cluster_config = cluster.private_cluster_config
     }
   }
 }
