@@ -162,11 +162,11 @@ locals {
           }
         ]
       )
-      timeout = try("${app_source_config.config.build.timeout_seconds}s", "${var.build_timeout_default_seconds}s")
+      timeout = format("%ds", coalesce(try(app_source_config.config.build.timeout_seconds, null), var.build_timeout_default_seconds))
       options = {
         requested_verify_option = "VERIFIED"
         logging                 = "CLOUD_LOGGING_ONLY"
-        machine_type            = app_source_config.config.build == null ? var.build_machine_type_default : app_source_config.config.build.machine_type
+        machine_type            = coalesce(try(app_source_config.config.build.machine_type, null), var.build_machine_type_default)
         worker_pool             = var.cloud_build_peered_network != null ? google_cloudbuild_worker_pool.ci_pool[0].id : null
       }
     }

@@ -1,4 +1,4 @@
-# Copyright 2024-2025 Google LLC
+# Copyright 2024-2026 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -93,9 +93,9 @@ variable "apps" {
       # The relative path to the directory containing skaffold.yaml within the repository.
       skaffold_path = optional(string)
       # The timeout for the build in seconds.
-      timeout_seconds = number
+      timeout_seconds = optional(number)
       # The machine type to use for the build.
-      machine_type = string
+      machine_type = optional(string)
       })
     )
     runtime = optional(string, "cloudrun"),
@@ -497,6 +497,12 @@ variable "service_account_cloud_deploy_name" {
 # Cloud Workstations
 
 # go/keep-sorted start block=yes newline_separated=yes
+variable "boot_disk_size_gb_default" {
+  type        = number
+  description = "The default boot disk size in GB for Cloud Workstation instances."
+  default     = 100
+}
+
 variable "cws_image_build_runner_role_create" {
   type        = bool
   description = "Whether to create the custom IAM role for the Cloud Workstation Image Build Runner. If false, the role is expected to exist."
@@ -526,7 +532,97 @@ variable "cws_service_account_name" {
   description = "Name of the Cloud Workstations Service Account."
   default     = "workstations"
 }
+
+variable "disable_public_ip_addresses_default" {
+  type        = bool
+  description = "The default for disabling public IP addresses for Cloud Workstation instances."
+  default     = false
+}
+
+variable "enable_nested_virtualization_default" {
+  type        = bool
+  description = "The default for enabling nested virtualization for Cloud Workstation instances."
+  default     = true
+}
+
+variable "idle_timeout_seconds_default" {
+  type        = number
+  description = "The default idle timeout in seconds for Cloud Workstation instances."
+  default     = 3600
+}
+
+variable "machine_type_default" {
+  type        = string
+  description = "The default machine type for Cloud Workstation instances."
+  default     = "n1-standard-96"
+}
+
+variable "persistent_disk_fs_type_default" {
+  type        = string
+  description = "The default filesystem type for Cloud Workstation persistent disks."
+  default     = "ext4"
+}
+
+variable "persistent_disk_reclaim_policy_default" {
+  type        = string
+  description = "The default reclaim policy for Cloud Workstation persistent disks."
+  default     = "RETAIN"
+}
+
+variable "persistent_disk_type_default" {
+  type        = string
+  description = "The default disk type for Cloud Workstation persistent disks."
+  default     = "pd-balanced"
+}
+
+variable "pool_size_default" {
+  type        = number
+  description = "The default pool size for Cloud Workstation instances."
+  default     = 0
+}
 # go/keep-sorted end
+
+# Cloud Workstations Custom Images
+
+variable "cws_custom_images" {
+  type = map(object({
+    build = optional(object({
+      skaffold_path   = optional(string)
+      timeout_seconds = optional(number)
+      machine_type    = optional(string)
+      })
+    )
+    workstation_config = optional(object({
+      scheduler_region = optional(string)
+      ci_schedule      = string
+    })),
+    git_repo = optional(object({
+      url    = string
+      branch = string
+    })),
+    github = optional(object({
+      owner          = string
+      repo           = string
+      branch_pattern = string
+    })),
+    ssm = optional(object({
+      instance_id = string
+      repo_name   = string
+      branch      = string
+    }))
+  }))
+  description = <<-EOT
+    Map of applications as found within the apps/ folder of the repository,
+    their build configuration, runtime, deployment stages and parameters.
+  EOT
+  default     = {}
+  validation {
+    condition = alltrue([
+      for k, v in var.cws_custom_images : sum([v.github != null ? 1 : 0, v.ssm != null ? 1 : 0, v.git_repo != null ? 1 : 0]) <= 1
+    ])
+    error_message = "A custom image can specify at most one source: github, ssm, or git_repo."
+  }
+}
 
 # Cloud Workstations Clusters
 
@@ -567,28 +663,28 @@ variable "cws_configs" {
       machine_type                 = optional(string)
       pool_size                    = optional(number)
     })), [])
-    boot_disk_size_gb = optional(number, 2000)
+    boot_disk_size_gb = optional(number)
     creators          = optional(list(string))
     # In case custom images shall be used, the keys from the cws_custom_images map.
     custom_image_names           = optional(list(string), [])
     cws_cluster                  = string
-    disable_public_ip_addresses  = optional(bool, false)
+    disable_public_ip_addresses  = optional(bool)
     display_name                 = optional(string)
-    enable_nested_virtualization = optional(bool, true)
-    idle_timeout_seconds         = optional(number, 7200)
+    enable_nested_virtualization = optional(bool)
+    idle_timeout_seconds         = optional(number)
     image                        = optional(string)
     instances = optional(list(object({
       name         = string
       display_name = optional(string)
       users        = list(string)
     })))
-    machine_type                    = optional(string, "n1-standard-96")
+    machine_type                    = optional(string)
     persistent_disk_fs_type         = optional(string)
-    persistent_disk_reclaim_policy  = optional(string, "RETAIN")
+    persistent_disk_reclaim_policy  = optional(string)
     persistent_disk_size_gb         = optional(number)
     persistent_disk_source_snapshot = optional(string)
-    persistent_disk_type            = string
-    pool_size                       = optional(number, 0)
+    persistent_disk_type            = optional(string)
+    pool_size                       = optional(number)
     shielded_instance_config = optional(object({
       enable_secure_boot          = optional(bool, true)
       enable_vtpm                 = optional(bool, true)
@@ -601,16 +697,16 @@ variable "cws_configs" {
   validation {
     condition = alltrue([
       for k, v in var.cws_configs :
-      v.persistent_disk_source_snapshot == null || (v.persistent_disk_size_gb == null && v.persistent_disk_fs_type == null)
+      v.persistent_disk_source_snapshot == null || v.persistent_disk_size_gb == null
     ])
-    error_message = "If persistent_disk_source_snapshot is provided, persistent_disk_size_gb and persistent_disk_fs_type must not be set."
+    error_message = "If persistent_disk_source_snapshot is provided, persistent_disk_size_gb must not be set."
   }
   validation {
     condition = alltrue([
       for k, v in var.cws_configs :
-      v.persistent_disk_source_snapshot != null || (v.persistent_disk_size_gb != null && v.persistent_disk_fs_type != null)
+      v.persistent_disk_source_snapshot != null || v.persistent_disk_size_gb != null
     ])
-    error_message = "If persistent_disk_source_snapshot is not provided, persistent_disk_size_gb and persistent_disk_fs_type must both be set."
+    error_message = "If persistent_disk_source_snapshot is not provided, persistent_disk_size_gb must be set."
   }
   validation {
     condition = alltrue([
@@ -625,47 +721,5 @@ variable "cws_configs" {
       ])
     ])
     error_message = "If custom_image_names is provided, all names must be keys in the cws_custom_images map."
-  }
-}
-
-# Custom images for Cloud Workstations
-
-variable "cws_custom_images" {
-  type = map(object({
-    build = optional(object({
-      skaffold_path   = optional(string)
-      timeout_seconds = number
-      machine_type    = string
-      })
-    )
-    workstation_config = optional(object({
-      scheduler_region = string
-      ci_schedule      = string
-    })),
-    git_repo = optional(object({
-      url    = string
-      branch = string
-    })),
-    github = optional(object({
-      owner          = string
-      repo           = string
-      branch_pattern = string
-    })),
-    ssm = optional(object({
-      instance_id = string
-      repo_name   = string
-      branch      = string
-    }))
-  }))
-  description = <<-EOT
-    Map of applications as found within the apps/ folder of the repository,
-    their build configuration, runtime, deployment stages and parameters.
-  EOT
-  default     = {}
-  validation {
-    condition = alltrue([
-      for k, v in var.cws_custom_images : sum([v.github != null ? 1 : 0, v.ssm != null ? 1 : 0, v.git_repo != null ? 1 : 0]) <= 1
-    ])
-    error_message = "A custom image can specify at most one source: github, ssm, or git_repo."
   }
 }

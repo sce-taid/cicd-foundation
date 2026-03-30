@@ -95,9 +95,9 @@ variable "apps" {
       # repository.
       skaffold_path = optional(string)
       # The timeout for the build in seconds.
-      timeout_seconds = number
+      timeout_seconds = optional(number)
       # The machine type to use for the build.
-      machine_type = string
+      machine_type = optional(string)
       })
     )
     runtime = optional(string, "cloudrun"),
@@ -260,7 +260,7 @@ variable "secure_source_manager_ca_lifetime_seconds" {
 variable "secure_source_manager_ca_organization" {
   type        = string
   description = "The organization name for the root CA certificate."
-  default     = "Example.com"
+  default     = "example.com"
 }
 
 variable "secure_source_manager_ca_pool" {

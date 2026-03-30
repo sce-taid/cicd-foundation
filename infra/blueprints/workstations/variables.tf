@@ -40,6 +40,12 @@ variable "cloud_build_region" {
   default     = "us-central1"
 }
 
+variable "scheduler_default_region" {
+  type        = string
+  description = "The default region for the Cloud Scheduler if not specified in the application config."
+  default     = "us-central1"
+}
+
 variable "secret_manager_region" {
   type        = string
   description = "The region for Secret Manager."
@@ -157,113 +163,86 @@ variable "secure_source_manager_repo_name" {
 }
 # go/keep-sorted end
 
-# Cloud Workstations Clusters
+# Cloud Workstations
 
-variable "cws_clusters" {
-  type = map(object({
-    network    = string
-    region     = string
-    subnetwork = string
-    vpc_project = optional(string)
-    domain_config = optional(object({
-      domain = string
-    }))
-    private_cluster_config = optional(object({
-      enable_private_endpoint = optional(bool, false)
-    }))
-  }))
-  description = "A map of Cloud Workstation clusters to create. The key of the map is used as the unique ID for the cluster."
-  default     = {}
+variable "boot_disk_size_gb_default" {
+  type        = number
+  description = "The default boot disk size in GB for Cloud Workstation instances."
+  default     = 100
 }
 
-# Cloud Workstations Configs and instances
-
-variable "cws_configs" {
-  type = map(object({
-    # go/keep-sorted start
-    accelerators = optional(list(object({
-      type  = string
-      count = number
-    })), [])
-    boost_configs = optional(list(object({
-      id = string
-      accelerators = optional(list(object({
-        type  = string
-        count = number
-      })), [])
-      boot_disk_size_gb            = optional(number)
-      enable_nested_virtualization = optional(bool)
-      machine_type                 = optional(string)
-      pool_size                    = optional(number)
-    })), [])
-    boot_disk_size_gb            = optional(number, 200)
-    creators                     = optional(list(string))
-    custom_image_names           = optional(list(string), [])
-    cws_cluster                  = string
-    disable_public_ip_addresses  = optional(bool, false)
-    display_name                 = optional(string)
-    enable_nested_virtualization = optional(bool, true)
-    idle_timeout_seconds         = optional(number, 3600)
-    image                        = optional(string)
-    instances = optional(list(object({
-      name         = string
-      display_name = optional(string)
-      users        = list(string)
-    })))
-    machine_type                    = optional(string, "n1-standard-96")
-    persistent_disk_fs_type         = optional(string)
-    persistent_disk_reclaim_policy  = optional(string, "RETAIN")
-    persistent_disk_size_gb         = optional(number)
-    persistent_disk_source_snapshot = optional(string)
-    persistent_disk_type            = string
-    pool_size                       = optional(number, 0)
-    shielded_instance_config = optional(object({
-      enable_secure_boot          = optional(bool, true)
-      enable_vtpm                 = optional(bool, true)
-      enable_integrity_monitoring = optional(bool, true)
-    }), null)
-    # go/keep-sorted end
-  }))
-  description = "A map of Cloud Workstation configurations."
-  default     = {}
-  validation {
-    condition = alltrue([
-      for k, v in var.cws_configs :
-      v.persistent_disk_source_snapshot == null || (v.persistent_disk_size_gb == null && v.persistent_disk_fs_type == null)
-    ])
-    error_message = "If persistent_disk_source_snapshot is provided, persistent_disk_size_gb and persistent_disk_fs_type must not be set."
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.cws_configs :
-      v.persistent_disk_source_snapshot != null || (v.persistent_disk_size_gb != null && v.persistent_disk_fs_type != null)
-    ])
-    error_message = "If persistent_disk_source_snapshot is not provided, persistent_disk_size_gb and persistent_disk_fs_type must both be set."
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.cws_configs : v.image == null || length(coalesce(v.custom_image_names, [])) == 0
-    ])
-    error_message = "image and custom_image_names are mutually exclusive and cannot be set at the same time."
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.cws_configs : alltrue([
-        for name in coalesce(v.custom_image_names, []) : contains(keys(var.cws_custom_images), name)
-      ])
-    ])
-    error_message = "If custom_image_names is provided, all names must be keys in the cws_custom_images map."
-  }
+variable "disable_public_ip_addresses_default" {
+  type        = bool
+  description = "The default for disabling public IP addresses for Cloud Workstation instances."
+  default     = false
 }
 
-# Custom images for Cloud Workstations
+variable "enable_nested_virtualization_default" {
+  type        = bool
+  description = "The default for enabling nested virtualization for Cloud Workstation instances."
+  default     = true
+}
+
+variable "idle_timeout_seconds_default" {
+  type        = number
+  description = "The default idle timeout in seconds for Cloud Workstation instances."
+  default     = 3600
+}
+
+variable "machine_type_default" {
+  type        = string
+  description = "The default machine type for Cloud Workstation instances."
+  default     = "n1-standard-96"
+}
+
+variable "pool_size_default" {
+  type        = number
+  description = "The default pool size for Cloud Workstation instances."
+  default     = 0
+}
+
+variable "persistent_disk_reclaim_policy_default" {
+  type        = string
+  description = "The default reclaim policy for Cloud Workstation persistent disks."
+  default     = "RETAIN"
+}
+
+variable "persistent_disk_fs_type_default" {
+  type        = string
+  description = "The default filesystem type for Cloud Workstation persistent disks."
+  default     = "ext4"
+}
+
+variable "persistent_disk_type_default" {
+  type        = string
+  description = "The default disk type for Cloud Workstation persistent disks."
+  default     = "pd-balanced"
+}
+
+# Cloud Build
+
+# go/keep-sorted start block=yes newline_separated=yes
+variable "build_machine_type_default" {
+  type        = string
+  description = "The default machine type to use for Cloud Build jobs."
+  default     = "UNSPECIFIED"
+}
+
+variable "build_timeout_default_seconds" {
+  type        = number
+  description = "The default timeout in seconds for Cloud Build jobs."
+  default     = 7200
+}
+# go/keep-sorted end
+
+# Cloud Workstations Custom Images
 
 variable "cws_custom_images" {
   type = map(object({
     build = optional(object({
       skaffold_path   = optional(string)
-      timeout_seconds = number
-      machine_type    = string
+      timeout_seconds = optional(number)
+      machine_type    = optional(string)
       })
     )
     workstation_config = optional(object({
@@ -326,6 +305,105 @@ variable "cws_custom_images" {
       }
     },
     // go/keep-sorted end
+  }
+}
+
+# Cloud Workstations Clusters
+
+variable "cws_clusters" {
+  type = map(object({
+    network    = string
+    region     = string
+    subnetwork = string
+    vpc_project = optional(string)
+    domain_config = optional(object({
+      domain = string
+    }))
+    private_cluster_config = optional(object({
+      enable_private_endpoint = optional(bool, false)
+    }))
+  }))
+  description = "A map of Cloud Workstation clusters to create. The key of the map is used as the unique ID for the cluster."
+  default     = {}
+}
+
+# Cloud Workstations Configs and instances
+
+variable "cws_configs" {
+  type = map(object({
+    # go/keep-sorted start
+    accelerators = optional(list(object({
+      type  = string
+      count = number
+    })), [])
+    boost_configs = optional(list(object({
+      id = string
+      accelerators = optional(list(object({
+        type  = string
+        count = number
+      })), [])
+      boot_disk_size_gb            = optional(number)
+      enable_nested_virtualization = optional(bool)
+      machine_type                 = optional(string)
+      pool_size                    = optional(number)
+    })), [])
+    boot_disk_size_gb            = optional(number)
+    creators                     = optional(list(string))
+    custom_image_names           = optional(list(string), [])
+    cws_cluster                  = string
+    disable_public_ip_addresses  = optional(bool)
+    display_name                 = optional(string)
+    enable_nested_virtualization = optional(bool)
+    idle_timeout_seconds         = optional(number)
+    image                        = optional(string)
+    instances = optional(list(object({
+      name         = string
+      display_name = optional(string)
+      users        = list(string)
+    })))
+    machine_type                    = optional(string)
+    persistent_disk_fs_type         = optional(string)
+    persistent_disk_reclaim_policy  = optional(string)
+    persistent_disk_size_gb         = optional(number)
+    persistent_disk_source_snapshot = optional(string)
+    persistent_disk_type            = optional(string)
+    pool_size                       = optional(number)
+    shielded_instance_config = optional(object({
+      enable_secure_boot          = optional(bool, true)
+      enable_vtpm                 = optional(bool, true)
+      enable_integrity_monitoring = optional(bool, true)
+    }), null)
+    # go/keep-sorted end
+  }))
+  description = "A map of Cloud Workstation configurations."
+  default     = {}
+  validation {
+    condition = alltrue([
+      for k, v in var.cws_configs :
+      v.persistent_disk_source_snapshot == null || v.persistent_disk_size_gb == null
+    ])
+    error_message = "If persistent_disk_source_snapshot is provided, persistent_disk_size_gb must not be set."
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.cws_configs :
+      v.persistent_disk_source_snapshot != null || v.persistent_disk_size_gb != null
+    ])
+    error_message = "If persistent_disk_source_snapshot is not provided, persistent_disk_size_gb must be set."
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.cws_configs : v.image == null || length(coalesce(v.custom_image_names, [])) == 0
+    ])
+    error_message = "image and custom_image_names are mutually exclusive and cannot be set at the same time."
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.cws_configs : alltrue([
+        for name in coalesce(v.custom_image_names, []) : contains(keys(var.cws_custom_images), name)
+      ])
+    ])
+    error_message = "If custom_image_names is provided, all names must be keys in the cws_custom_images map."
   }
 }
 

@@ -91,7 +91,7 @@ resource "google_workstations_workstation_config" "config" {
   workstation_cluster_id = local.config_to_cluster_map[each.key].workstation_cluster_id
   location               = local.config_to_cluster_map[each.key].location
   display_name           = each.value.display_name
-  idle_timeout           = "${each.value.idle_timeout_seconds}s"
+  idle_timeout           = "${coalesce(each.value.idle_timeout_seconds, var.idle_timeout_seconds_default)}s"
   dynamic "container" {
     for_each = each.value.image != null ? [1] : []
 
@@ -101,13 +101,13 @@ resource "google_workstations_workstation_config" "config" {
   }
   host {
     gce_instance {
-      machine_type                 = each.value.machine_type
-      boot_disk_size_gb            = each.value.boot_disk_size_gb
+      machine_type                 = coalesce(each.value.machine_type, var.machine_type_default)
+      boot_disk_size_gb            = coalesce(each.value.boot_disk_size_gb, var.boot_disk_size_gb_default)
       service_account              = module.cws_service_account.email
       service_account_scopes       = var.cws_scopes
-      disable_public_ip_addresses  = each.value.disable_public_ip_addresses
-      pool_size                    = each.value.pool_size
-      enable_nested_virtualization = each.value.enable_nested_virtualization
+      disable_public_ip_addresses  = coalesce(each.value.disable_public_ip_addresses, var.disable_public_ip_addresses_default)
+      pool_size                    = coalesce(each.value.pool_size, var.pool_size_default)
+      enable_nested_virtualization = coalesce(each.value.enable_nested_virtualization, var.enable_nested_virtualization_default)
       dynamic "accelerators" {
         for_each = coalesce(each.value.accelerators, [])
 
@@ -151,9 +151,9 @@ resource "google_workstations_workstation_config" "config" {
     gce_pd {
       source_snapshot = each.value.persistent_disk_source_snapshot
       size_gb         = each.value.persistent_disk_size_gb
-      fs_type         = each.value.persistent_disk_fs_type
-      disk_type       = each.value.persistent_disk_type
-      reclaim_policy  = each.value.persistent_disk_reclaim_policy
+      fs_type         = each.value.persistent_disk_source_snapshot == null ? coalesce(each.value.persistent_disk_fs_type, var.persistent_disk_fs_type_default) : each.value.persistent_disk_fs_type
+      disk_type       = coalesce(each.value.persistent_disk_type, var.persistent_disk_type_default)
+      reclaim_policy  = coalesce(each.value.persistent_disk_reclaim_policy, var.persistent_disk_reclaim_policy_default)
     }
   }
   labels = local.common_labels

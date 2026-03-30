@@ -81,7 +81,7 @@ resource "google_cloud_scheduler_job" "cws_image_rebuild" {
     uri = format("https://cloudbuild.googleapis.com/v1/projects/%s/locations/%s/triggers/%s:run",
       data.google_project.project.project_id,
       var.cloud_build_region,
-      google_cloudbuild_trigger.ci_pipeline["${each.key}"].name
+      google_cloudbuild_trigger.ci_pipeline[(local.app_source[each.key].has_github || local.app_source[each.key].has_git_repo) ? "${each.key}-manual" : each.key].name
     )
     oauth_token {
       service_account_email = module.cws_image_build_runner_service_account[0].email

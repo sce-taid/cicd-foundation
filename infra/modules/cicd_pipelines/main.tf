@@ -116,7 +116,7 @@ locals {
 
   source = {
     github = var.github_owner != null && var.github_repo != null
-    ssm    = var.secure_source_manager_always_create || var.github_owner == null || var.github_repo == null
+    ssm    = var.secure_source_manager_always_create || (var.github_owner == null && var.github_repo == null && anytrue([for k, v in var.apps : v.github == null && v.git_repo == null]))
   }
 
   workstation_apps = { for k, v in var.apps : k => v if v.runtime == "workstations" }
