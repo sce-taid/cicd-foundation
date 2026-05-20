@@ -59,21 +59,22 @@ cws_custom_images = {
   # Custom Cloud Workstation Image with Antigravity
   "antigravity" : {
     build = {
-      skaffold_path = "workloads/cloud-workstations/pipelines/workstation-images/antigravity"
+      skaffold_path   = "workloads/cloud-workstations/pipelines/workstation-images/antigravity"
       machine_type    = "E2_HIGHCPU_32"
+      paused          = true            # Pause the Scheduler to trigger builds.
     }
   },
   # Custom Cloud Workstation Images for Android Development
   "android-studio" : {
     build = {
-      skaffold_path = "workloads/cloud-workstations/pipelines/workstation-images/horizon-android-studio"
+      skaffold_path   = "workloads/cloud-workstations/pipelines/workstation-images/horizon-android-studio"
       timeout_seconds = 7200
       machine_type    = "E2_HIGHCPU_32"
     }
   },
   "android-studio-for-platform" : {
     build = {
-      skaffold_path = "workloads/cloud-workstations/pipelines/workstation-images/horizon-asfp"
+      skaffold_path   = "workloads/cloud-workstations/pipelines/workstation-images/horizon-asfp"
       timeout_seconds = 7200
       machine_type    = "E2_HIGHCPU_32"
     }

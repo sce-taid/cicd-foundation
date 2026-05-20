@@ -27,10 +27,12 @@ locals {
         skaffold_path   = try(v.build.skaffold_path, null)
         timeout_seconds = try(v.build.timeout_seconds, null)
         machine_type    = try(v.build.machine_type, null)
+        env             = try(v.build.env, {})
       }
       workstation_config = {
         scheduler_region = try(v.workstation_config.scheduler_region, null)
         ci_schedule      = try(v.workstation_config.ci_schedule, null)
+        paused           = try(v.workstation_config.paused, false)
       }
       git_repo = v.git_repo
       github   = v.github
@@ -41,7 +43,7 @@ locals {
     "tf_module_github_org"  = "GoogleCloudPlatform"
     "tf_module_github_repo" = "cicd-foundation"
     "tf_module_name"        = "cicd_foundation"
-    "tf_module_version"     = "v5-0-0"
+    "tf_module_version"     = "v5-0-1"
   }
   # merge the default labels with the user-provided labels and convert to lowercase
   common_labels = {

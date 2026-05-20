@@ -243,11 +243,13 @@ variable "cws_custom_images" {
       skaffold_path   = optional(string)
       timeout_seconds = optional(number)
       machine_type    = optional(string)
+      env             = optional(map(string), {})
       })
     )
     workstation_config = optional(object({
       scheduler_region = optional(string)
       ci_schedule      = string
+      paused           = optional(bool, false)
     })),
     git_repo = optional(object({
       url    = string
@@ -312,9 +314,9 @@ variable "cws_custom_images" {
 
 variable "cws_clusters" {
   type = map(object({
-    network    = string
-    region     = string
-    subnetwork = string
+    network     = string
+    region      = string
+    subnetwork  = string
     vpc_project = optional(string)
     domain_config = optional(object({
       domain = string
@@ -331,7 +333,6 @@ variable "cws_clusters" {
 
 variable "cws_configs" {
   type = map(object({
-    # go/keep-sorted start
     accelerators = optional(list(object({
       type  = string
       count = number
@@ -373,7 +374,6 @@ variable "cws_configs" {
       enable_vtpm                 = optional(bool, true)
       enable_integrity_monitoring = optional(bool, true)
     }), null)
-    # go/keep-sorted end
   }))
   description = "A map of Cloud Workstation configurations."
   default     = {}

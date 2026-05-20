@@ -50,6 +50,7 @@ locals {
                 fi
               EOT
             ]
+            env = []
             # go/keep-sorted end
           }
         ] : [],
@@ -73,6 +74,7 @@ locals {
                   --quiet=$${_SKAFFOLD_QUIET}
               EOT
             ]
+            env = [for k, v in try(app_source_config.config.build.env, {}) : "${k}=${v}"]
             # go/keep-sorted end
           },
           # Fetches the image digests and pushes a 'latest' tag for each built image.
@@ -99,6 +101,7 @@ locals {
                 done
               EOT
             ]
+            env = []
             # go/keep-sorted end
           }
         ],
@@ -133,6 +136,7 @@ locals {
                 rm -f "$$POLICY_FILE"
               EOT
             ]
+            env = []
             # go/keep-sorted end
           }
         ] : [],
@@ -158,6 +162,7 @@ locals {
                   --deploy-parameters="commit-sha=$COMMIT_SHA,commit-short-sha=$SHORT_SHA,commitId=$REVISION_ID,gcb-build-id=$BUILD_ID,namespace=$${_NAMESPACE}"
               EOT
             ]
+            env = []
             # go/keep-sorted end
           }
         ]
@@ -327,7 +332,7 @@ resource "google_cloudbuild_trigger" "ci_pipeline" {
       for_each = each.value.steps
 
       content {
-        # go/keep-sorted start prefix_order=id,name,wait_for,allow_failure,dir,entrypoint,args
+        # go/keep-sorted start prefix_order=id,name,wait_for,allow_failure,dir,entrypoint,args,env
         id            = step.value.id
         name          = step.value.name
         wait_for      = step.value.wait_for
@@ -335,6 +340,7 @@ resource "google_cloudbuild_trigger" "ci_pipeline" {
         dir           = step.value.dir
         entrypoint    = step.value.entrypoint
         args          = step.value.args
+        env           = step.value.env
         # go/keep-sorted end
       }
     }

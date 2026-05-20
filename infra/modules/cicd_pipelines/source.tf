@@ -14,9 +14,9 @@
 
 locals {
   # go/keep-sorted start
-  cloudbuild_service_agent = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-cloudbuild.iam.gserviceaccount.com"
+  cloudbuild_service_agent        = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-cloudbuild.iam.gserviceaccount.com"
   cloudbuild_webhook_uri_template = "https://cloudbuild.googleapis.com/v1/projects/%s/locations/%s/triggers/%s:webhook"
-  create_ssm_ca_pool = local.source.ssm && ! local.ssm_instance_is_provided && var.secure_source_manager_create_ca_pool && var.secure_source_manager_ca_pool == null
+  create_ssm_ca_pool              = local.source.ssm && ! local.ssm_instance_is_provided && var.secure_source_manager_create_ca_pool && var.secure_source_manager_ca_pool == null
   ssm_instance_accessor_members = toset(concat(
     [module.service_account_cloud_build.iam_email],
     length(google_service_account.git_clone_and_push) > 0 ? [google_service_account.git_clone_and_push[0].member] : [],

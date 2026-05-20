@@ -97,9 +97,9 @@ variable "cws_scopes" {
 
 variable "cws_clusters" {
   type = map(object({
-    network    = string
-    region     = string
-    subnetwork = string
+    network     = string
+    region      = string
+    subnetwork  = string
     vpc_project = optional(string)
     domain_config = optional(object({
       domain = string
@@ -114,7 +114,6 @@ variable "cws_clusters" {
 
 variable "cws_configs" {
   type = map(object({
-    # go/keep-sorted start
     accelerators = optional(list(object({
       type  = string
       count = number
@@ -155,7 +154,6 @@ variable "cws_configs" {
       enable_vtpm                 = optional(bool, true)
       enable_integrity_monitoring = optional(bool, true)
     }), null)
-    # go/keep-sorted end
   }))
   description = "A map of Cloud Workstation configurations."
   default     = {}

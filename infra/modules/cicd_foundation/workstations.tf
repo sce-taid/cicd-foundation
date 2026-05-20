@@ -57,21 +57,21 @@ locals {
 module "workstations" {
   source = "./cicd_workstations"
 
-  project_id                           = data.google_project.project.project_id
-  enable_apis                          = var.enable_apis
-  cws_clusters                         = var.cws_clusters
-  cws_configs                          = local.cws_configs_hydrated
-  cws_scopes                           = var.cws_scopes
-  cws_service_account_name             = var.cws_service_account_name
-  boot_disk_size_gb_default            = var.boot_disk_size_gb_default
-  disable_public_ip_addresses_default  = var.disable_public_ip_addresses_default
-  enable_nested_virtualization_default = var.enable_nested_virtualization_default
-  idle_timeout_seconds_default         = var.idle_timeout_seconds_default
-  machine_type_default                 = var.machine_type_default
-  pool_size_default                    = var.pool_size_default
-  persistent_disk_fs_type_default      = var.persistent_disk_fs_type_default
+  project_id                             = data.google_project.project.project_id
+  enable_apis                            = var.enable_apis
+  cws_clusters                           = var.cws_clusters
+  cws_configs                            = local.cws_configs_hydrated
+  cws_scopes                             = var.cws_scopes
+  cws_service_account_name               = var.cws_service_account_name
+  boot_disk_size_gb_default              = var.boot_disk_size_gb_default
+  disable_public_ip_addresses_default    = var.disable_public_ip_addresses_default
+  enable_nested_virtualization_default   = var.enable_nested_virtualization_default
+  idle_timeout_seconds_default           = var.idle_timeout_seconds_default
+  machine_type_default                   = var.machine_type_default
+  pool_size_default                      = var.pool_size_default
+  persistent_disk_fs_type_default        = var.persistent_disk_fs_type_default
   persistent_disk_reclaim_policy_default = var.persistent_disk_reclaim_policy_default
-  persistent_disk_type_default         = var.persistent_disk_type_default
+  persistent_disk_type_default           = var.persistent_disk_type_default
 }
 
 resource "google_artifact_registry_repository_iam_member" "workstation_artifactregistry_reader" {

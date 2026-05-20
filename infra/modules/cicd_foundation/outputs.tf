@@ -33,6 +33,11 @@ output "cws_clusters" {
   value       = module.workstations.cws_clusters
 }
 
+output "cws_service_account_email" {
+  description = "The email address of the Cloud Workstations Service Account."
+  value       = module.workstations.cws_service_account_email
+}
+
 output "secure_source_manager_instance_git_http" {
   description = "The Git HTTP URI of the created Secure Source Manager instance."
   value       = length(local.all_apps) > 0 ? module.cicd_pipelines[0].secure_source_manager_instance_git_http : null

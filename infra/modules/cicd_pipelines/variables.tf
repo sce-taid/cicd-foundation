@@ -98,6 +98,7 @@ variable "apps" {
       timeout_seconds = optional(number)
       # The machine type to use for the build.
       machine_type = optional(string)
+      env          = optional(map(string), {})
       })
     )
     runtime = optional(string, "cloudrun"),
@@ -121,6 +122,7 @@ variable "apps" {
       scheduler_region = optional(string)
       # The schedule for the Cloud Scheduler job in cron format (e.g., "0 1 * * *")
       ci_schedule = string
+      paused      = optional(bool, false)
     }))
   }))
   description = <<EOF
