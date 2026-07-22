@@ -46,13 +46,13 @@ This image supports and propagates all base arguments, including:
 | Argument                               | Default | Description                                      |
 | :------------------------------------- | :------ | :----------------------------------------------- |
 | `INSTALL_AGENT_DEVELOPMENT_KIT_PYTHON` | `true`  | Installs the Python-based Agent Development Kit. |
-| `INSTALL_ANTIGRAVITY_CLI`                   | `true`  | Installs the Antigravity CLI agent.                   |
+| `INSTALL_ANTIGRAVITY_CLI`              | `true`  | Installs the Antigravity CLI agent.              |
 
 ## 📖 Documentation
 
 - **[Design Document](./docs/design.md)**: Deep-dive into the thin-layer architecture, hook-based integration logic, and declarative packaging.
-- **[System Overview](../../../docs/system_overview.md)**: High-level map of the entire Cloud Workstations Custom Image blueprint stack.
-- **[Hackathon Guide](../../../docs/playbooks/hackathon_guide.md)**: A complete walkthrough for organizers deploying this environment at scale within customer organizations.
+- **[System Overview & Design](../../../docs/workstations/design.md)**: High-level map of the entire Cloud Workstations Custom Image blueprint stack.
+- **[Hackathon Guide](../../../docs/hackathon_guide.md)**: A complete walkthrough for organizers deploying this environment at scale within customer organizations.
 - **[Base Blueprint Docs](../gnome/docs/design.md)**: Deep-dives into the underlying systemd orchestrations and networking handover logic.
 
 ## Getting Started

@@ -99,7 +99,7 @@ variable "apps" {
       env          = optional(map(string), {})
       })
     )
-    runtime = optional(string, "cloudrun"),
+    runtime = optional(string),
     stages  = optional(map(map(string))),
     git_repo = optional(object({
       url    = string
@@ -114,7 +114,16 @@ variable "apps" {
       instance_id = string
       repo_name   = string
       branch      = string
-    }))
+    })),
+    agents = optional(map(map(object({
+      enabled       = optional(bool, false)
+      model         = optional(string)
+      location      = optional(string)
+      personas      = optional(list(string))
+      instructions  = optional(string)
+      prompt        = optional(string)
+      allow_failure = optional(bool, true)
+    }))), {})
   }))
   description = "Map of applications to be deployed."
   default     = {}
@@ -159,7 +168,7 @@ variable "stages" {
   validation {
     condition = alltrue([
       for stage_key, stage_value in var.stages :
-      ! contains(keys(stage_value), "canary_percentages") || contains(keys(stage_value), "gke_cluster")
+      !contains(keys(stage_value), "canary_percentages") || contains(keys(stage_value), "gke_cluster")
     ])
     error_message = "The 'canary_percentages' can only be set when 'gke_cluster' is also provided for the stage."
   }
@@ -262,7 +271,7 @@ variable "secure_source_manager_create_ca_pool" {
   description = "If true, and secure_source_manager_ca_pool is not set, creates a new CA Pool and Root CA for use with a private Secure Source Manager instance."
   default     = false
   validation {
-    condition     = ! var.secure_source_manager_create_ca_pool || var.secure_source_manager_ca_pool == null
+    condition     = !var.secure_source_manager_create_ca_pool || var.secure_source_manager_ca_pool == null
     error_message = "Cannot set secure_source_manager_create_ca_pool to true when secure_source_manager_ca_pool is provided."
   }
 }
@@ -504,6 +513,12 @@ variable "boot_disk_size_gb_default" {
   default     = 100
 }
 
+variable "build_source_retention_days" {
+  type        = number
+  description = "The number of days to retain Cloud Build source archives in the GCS staging bucket before deletion."
+  default     = 7
+}
+
 variable "cws_image_build_runner_role_create" {
   type        = bool
   description = "Whether to create the custom IAM role for the Cloud Workstation Image Build Runner. If false, the role is expected to exist."
@@ -724,3 +739,34 @@ variable "cws_configs" {
     error_message = "If custom_image_names is provided, all names must be keys in the cws_custom_images map."
   }
 }
+
+variable "default_agentic_model" {
+  type        = string
+  description = "The default Gemini model used for the agentic review (e.g., 'gemini-3.5-flash')."
+  default     = "gemini-3.5-flash"
+}
+
+variable "default_agentic_location" {
+  type        = string
+  description = "The default Agent Platform endpoint location for the agentic review models."
+  default     = "global"
+}
+
+variable "default_agentic_personas" {
+  type        = list(string)
+  description = "The default list of persona profiles to run during the automated review (e.g., 'swe', 'security')."
+  default     = ["swe", "security"]
+}
+
+variable "default_agentic_instructions" {
+  type        = string
+  description = "The default system instructions passed to the agent to define its behavior."
+  default     = "You are an automated platform review agent. Adopt the requested personas to audit the workspace codebase changes."
+}
+
+variable "default_agentic_prompt" {
+  type        = string
+  description = "The default prompt passed to each persona reviewer."
+  default     = "Analyze the modified files in the workspace. Audit the code against your persona's mandates and guidelines, highlighting any issues or improvements needed."
+}
+

@@ -32,6 +32,7 @@ main() {
   local test_hooks=(
     "bats-skills"
     "pytest-skills"
+    "pytest-pipelines"
     "go-test-persona"
     "bats-preflight"
     "bats-preflight-web"

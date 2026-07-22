@@ -56,7 +56,7 @@ We follow the standard Testing Pyramid, focusing on fast-running unit tests for 
 ### AC4: Documentation is complete and sufficient
 
 - **Verification**:
-  - **Technical Review**: Peer review of `README.md`, `docs/deployment_guide.md`, and style guides.
+  - **Technical Review**: Peer review of `README.md`, `docs/iac/admin_guide.md`, and style guides.
   - **User Trial**: A "clean room" deployment by a user not involved in development (e.g., a Developer Advocate persona).
 
 ## 4. Non-Functional Requirement (NFR) Validation

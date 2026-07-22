@@ -77,27 +77,8 @@ setup_rdp_certs() {
 }
 
 # Initializes the GNOME keyring with a blank password.
-setup_keyring() {
-  if command -v gnome-keyring-daemon >/dev/null 2>&1; then
-    log "Initializing gnome-keyring..."
-    local keyring_dir="/home/${WORKSTATION_USER}/.local/share/keyrings"
-
-    # Nuke old keyrings to avoid stale password issues
-    rm -rf "${keyring_dir}"
-    mkdir -p "${keyring_dir}"
-    chown -R "${WORKSTATION_UID}:${WORKSTATION_UID}" "/home/${WORKSTATION_USER}/.local"
-
-    # Ensure a default keyring exists and is unlocked
-    runuser -u "${WORKSTATION_USER}" -- bash -c "
-      export HOME=/home/${WORKSTATION_USER}
-      export XDG_RUNTIME_DIR=/run/user/${WORKSTATION_UID}
-      export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/${WORKSTATION_UID}/bus
-      printf '\n' | gnome-keyring-daemon --unlock
-    " || true
-
-    chown -R "${WORKSTATION_UID}:${WORKSTATION_UID}" "${keyring_dir}"
-  fi
-}
+# Note: Keyring initialization is now performed in start_gnome_session.sh
+# before the session launches to prevent locked defaults and D-Bus race conditions.
 
 # Sets Google Chrome as the default browser.
 setup_browser() {
@@ -164,7 +145,6 @@ main() {
   rm -f "/home/${WORKSTATION_USER}/.local/share/applications/org.gnome.Shell.desktop"
 
   setup_rdp_certs
-  setup_keyring
   setup_browser
   setup_gnome_settings
 

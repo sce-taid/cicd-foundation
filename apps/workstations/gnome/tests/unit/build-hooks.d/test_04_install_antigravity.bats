@@ -14,7 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load ../../test_helper.bash
+# shellcheck disable=SC2329
+
+load ../test_helper.bash
 
 setup() {
   # Mock external commands
@@ -23,6 +25,7 @@ setup() {
   pipx() { echo "MOCK_PIPX: $*"; }
 
   export -f chmod antigravity pipx
+  export INSTALL_ANTIGRAVITY_SDK="false"
 
   # Source the script under test
   source "${HOOKS_DIR}/04_install_antigravity.sh"

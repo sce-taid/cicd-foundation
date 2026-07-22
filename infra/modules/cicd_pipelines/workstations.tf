@@ -15,7 +15,7 @@
 # Fetch an existing custom role for the Cloud Workstations image build runner.
 # This role is not namespaced and is reused.
 data "google_project_iam_custom_role" "cws_image_build_runner_data" {
-  count = length(local.workstation_apps) > 0 && ! var.cws_image_build_runner_role_create ? 1 : 0
+  count = length(local.scheduled_apps) > 0 && !var.cws_image_build_runner_role_create ? 1 : 0
 
   project = data.google_project.project.project_id
   role_id = var.cws_image_build_runner_role_id
@@ -24,7 +24,7 @@ data "google_project_iam_custom_role" "cws_image_build_runner_data" {
 # Create a custom role for the Cloud Workstations image build runner.
 # This role is not namespaced.
 resource "google_project_iam_custom_role" "cws_image_build_runner" {
-  count = length(local.workstation_apps) > 0 && var.cws_image_build_runner_role_create ? 1 : 0
+  count = length(local.scheduled_apps) > 0 && var.cws_image_build_runner_role_create ? 1 : 0
 
   project     = data.google_project.project.project_id
   role_id     = var.cws_image_build_runner_role_id
@@ -36,7 +36,7 @@ resource "google_project_iam_custom_role" "cws_image_build_runner" {
 }
 
 module "cws_image_build_runner_service_account" {
-  count = length(local.workstation_apps) > 0 ? 1 : 0
+  count = length(local.scheduled_apps) > 0 ? 1 : 0
 
   source = "github.com/GoogleCloudPlatform/cloud-foundation-fabric//modules/iam-service-account?ref=v45.0.0"
 
@@ -52,7 +52,7 @@ module "cws_image_build_runner_service_account" {
 }
 
 resource "google_project_iam_member" "cws_image_build_runner" {
-  count = length(local.workstation_apps) > 0 ? 1 : 0
+  count = length(local.scheduled_apps) > 0 ? 1 : 0
 
   project = data.google_project.project.project_id
   role = (
@@ -67,14 +67,17 @@ resource "google_project_iam_member" "cws_image_build_runner" {
 
 # cf. https://cloud.google.com/workstations/docs/tutorial-automate-container-image-rebuild
 resource "google_cloud_scheduler_job" "cws_image_rebuild" {
-  for_each = local.workstation_apps
+  for_each = local.scheduled_apps
 
   project     = data.google_project.project.project_id
   region      = coalesce(try(each.value.workstation_config.scheduler_region, null), var.scheduler_default_region)
-  name        = "${local.prefix}${each.key}-cws-image-rebuild"
+  name        = "${local.prefix}${each.key}-rebuild"
   description = "Terraform-managed."
   schedule    = coalesce(try(each.value.workstation_config.ci_schedule, null), var.default_ci_schedule)
-  paused      = try(each.value.workstation_config.paused, false)
+  paused = coalesce(
+    try(each.value.workstation_config.paused, null),
+    try(each.value.runtime, null) == "workstations" ? false : true
+  )
   # cf. https://cloud.google.com/build/docs/api/reference/rest/v1/projects.triggers/run
   http_target {
     http_method = "POST"

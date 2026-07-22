@@ -1,3 +1,19 @@
+<!--
+Copyright 2026 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 # Terraform Module for supporting Cloud Workstations with custom images (`cicd_workstations`)
 
 This module provisions
@@ -7,32 +23,32 @@ Cloud.
 
 It allows you to define and manage:
 
-*   **Workstation Clusters**: The top-level resource that defines the region and
-    network for your workstations.
-*   **Workstation Configurations**: Templates that define workstation settings
-    like machine type, disk size, pool size, idle timeouts, and crucially, the
-    container image to use for the development environment. This allows using
-    custom images built via CI/CD pipelines (e.g., using the `cicd_pipelines`
-    module).
-*   **Workstation Instances**: Specific workstation instances based on a
-    configuration, with assigned users.
-*   **IAM**: Permissions for users to create or use workstations.
+- **Workstation Clusters**: The top-level resource that defines the region and
+  network for your workstations.
+- **Workstation Configurations**: Templates that define workstation settings
+  like machine type, disk size, pool size, idle timeouts, and crucially, the
+  container image to use for the development environment. This allows using
+  custom images built via CI/CD pipelines (e.g., using the `cicd_pipelines`
+  module).
+- **Workstation Instances**: Specific workstation instances based on a
+  configuration, with assigned users.
+- **IAM**: Permissions for users to create or use workstations.
 
 ## Features
 
-*   **Managed Development Environments**: Sets up Cloud Workstations clusters,
-    configurations, and individual workstation instances.
-*   **Custom Images**: Easily specify custom container images for workstation
-    configurations, allowing standardized and pre-configured development
-    environments.
-*   **Networking**: Configures workstation clusters within your VPC network and
-    subnets.
-*   **Persistent Storage**: Supports persistent disks for retaining user data
-    and IDE state across sessions.
-*   **IAM Integration**: Manages IAM policies to grant specific users or groups
-    permissions to create or access workstations.
-*   **Fine-Grained Configuration**: Control machine types, disk sizes, idle
-    timeouts, pool sizes, and more.
+- **Managed Development Environments**: Sets up Cloud Workstations clusters,
+  configurations, and individual workstation instances.
+- **Custom Images**: Easily specify custom container images for workstation
+  configurations, allowing standardized and pre-configured development
+  environments.
+- **Networking**: Configures workstation clusters within your VPC network and
+  subnets.
+- **Persistent Storage**: Supports persistent disks for retaining user data
+  and IDE state across sessions.
+- **IAM Integration**: Manages IAM policies to grant specific users or groups
+  permissions to create or access workstations.
+- **Fine-Grained Configuration**: Control machine types, disk sizes, idle
+  timeouts, pool sizes, and more.
 
 ## Usage
 
@@ -42,7 +58,7 @@ specific user.
 
 ```terraform
 module "cicd_workstations" {
-  source = "github.com/GoogleCloudPlatform/cicd-foundation//infra/modules/cicd_workstations?ref=v5.0.1"
+  source = "github.com/GoogleCloudPlatform/cicd-foundation//infra/modules/cicd_workstations?ref=v6.0.0"
 
   project_id = "your-gcp-project-id"
 
@@ -85,7 +101,7 @@ module "cicd_workstations" {
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_boot_disk_size_gb_default"></a> [boot\_disk\_size\_gb\_default](#input\_boot\_disk\_size\_gb\_default) | The default boot disk size in GB for Cloud Workstation instances. | `number` | `100` | no |
 | <a name="input_cws_clusters"></a> [cws\_clusters](#input\_cws\_clusters) | A map of Cloud Workstation clusters to create. The key of the map is used as the unique ID for the cluster. | <pre>map(object({<br/>    network     = string<br/>    region      = string<br/>    subnetwork  = string<br/>    vpc_project = optional(string)<br/>    domain_config = optional(object({<br/>      domain = string<br/>    }))<br/>    private_cluster_config = optional(object({<br/>      enable_private_endpoint = optional(bool, false)<br/>    }))<br/>  }))</pre> | `{}` | no |
 | <a name="input_cws_configs"></a> [cws\_configs](#input\_cws\_configs) | A map of Cloud Workstation configurations. | <pre>map(object({<br/>    accelerators = optional(list(object({<br/>      type  = string<br/>      count = number<br/>    })), [])<br/>    boost_configs = optional(list(object({<br/>      id = string<br/>      accelerators = optional(list(object({<br/>        type  = string<br/>        count = number<br/>      })), [])<br/>      boot_disk_size_gb            = optional(number)<br/>      enable_nested_virtualization = optional(bool)<br/>      machine_type                 = optional(string)<br/>      pool_size                    = optional(number)<br/>    })), [])<br/>    boot_disk_size_gb            = optional(number)<br/>    creators                     = optional(list(string))<br/>    cws_cluster                  = string<br/>    disable_public_ip_addresses  = optional(bool)<br/>    display_name                 = optional(string)<br/>    enable_nested_virtualization = optional(bool)<br/>    idle_timeout_seconds         = optional(number)<br/>    image                        = optional(string)<br/>    instances = optional(list(object({<br/>      name         = string<br/>      display_name = optional(string)<br/>      users        = list(string)<br/>    })))<br/>    machine_type                    = optional(string)<br/>    persistent_disk_fs_type         = optional(string)<br/>    persistent_disk_reclaim_policy  = optional(string)<br/>    persistent_disk_size_gb         = optional(number)<br/>    persistent_disk_source_snapshot = optional(string)<br/>    persistent_disk_type            = optional(string)<br/>    pool_size                       = optional(number)<br/>    shielded_instance_config = optional(object({<br/>      enable_secure_boot          = optional(bool, true)<br/>      enable_vtpm                 = optional(bool, true)<br/>      enable_integrity_monitoring = optional(bool, true)<br/>    }), null)<br/>  }))</pre> | `{}` | no |
@@ -106,7 +122,7 @@ module "cicd_workstations" {
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_cws_clusters"></a> [cws\_clusters](#output\_cws\_clusters) | A map of Cloud Workstation clusters, with their IDs and other attributes. |
 | <a name="output_cws_configs"></a> [cws\_configs](#output\_cws\_configs) | A map of Cloud Workstation configurations, with their IDs and other attributes. |
 | <a name="output_cws_instances"></a> [cws\_instances](#output\_cws\_instances) | A map of Cloud Workstation instances, with their IDs and other attributes. |

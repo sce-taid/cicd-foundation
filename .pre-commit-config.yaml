@@ -13,16 +13,6 @@
 # limitations under the License.
 
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
-    hooks:
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-added-large-files
-      - id: check-merge-conflict
-      - id: check-case-conflict
-      - id: mixed-line-ending
-
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1
     hooks:
@@ -32,13 +22,6 @@ repos:
     rev: v0.8.0
     hooks:
       - id: keep-sorted
-
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.9
-    hooks:
-      - id: ruff
-        args: [--fix, --extend-ignore, E402]
-      - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v3.1.0
@@ -52,10 +35,42 @@ repos:
             .*/dist/.*
           )
 
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.10.0.1
+  - repo: local
     hooks:
+      - id: gofmt
+        name: Go Formatting (gofmt)
+        entry: gofmt -w
+        language: system
+        types: [go]
+
+      # --- SECTION: General & Shared Tooling ---
+
+      - id: ruff
+        name: Ruff Linting & Autocorrect
+        entry: uv run ruff check --fix --extend-ignore E402
+        language: system
+        types: [python]
+        require_serial: true
+
+      - id: ruff-format
+        name: Ruff Code Formatting
+        entry: uv run ruff format
+        language: system
+        types: [python]
+        require_serial: true
+
+      - id: terraform-fmt
+        name: Terraform Format (terraform fmt)
+        entry: terraform fmt
+        language: system
+        types: [terraform]
+        pass_filenames: true
+
       - id: shellcheck
+        name: ShellCheck (system shellcheck)
+        entry: shellcheck
+        language: system
+        types: [shell]
         args:
           [
             -e,
@@ -88,61 +103,11 @@ repos:
             SC1091,
           ]
 
-  - repo: local
-    hooks:
-      - id: gofmt
-        name: Go Formatting (gofmt)
-        entry: gofmt -w
-        language: system
-        types: [go]
-
-      # --- SECTION: General & Shared Tooling ---
-
-      - id: clean-whitespace
-        name: Clean Trailing Whitespace (Custom)
-        entry: bash -c 'cd skills/persona-swe/scripts && go run cmd/clean_whitespace/main.go -- "${@/#/../../../}"' --
-        language: system
-        pass_filenames: true
-        require_serial: true
-        types: [text]
-        exclude: |
-          (?x)^(
-            node_modules/|
-            dist/|
-            vendor/|
-            tests/integration/|
-            .*\.go$|
-            .*\.py$
-          )
-
       - id: license-enforcer
         name: License Enforcer (Go)
         entry: bash -c 'cd skills/persona-legal/scripts && go run cmd/license_enforcer/main.go -- "${@/#/../../../}"' --
         language: system
         pass_filenames: true
-        require_serial: true
-
-      - id: verify-locales
-        name: Verify i18n Locales (Sorting & Consistency)
-        entry: bash -c 'cd skills/persona-swe/scripts && go run cmd/verify_locales/main.go -- "${@/#/../../../}"' --
-        language: system
-        pass_filenames: true
-        require_serial: true
-        files: ".*locale.*\\.json$"
-
-      - id: gitseep
-        name: GitSeep (auto-approve)
-        entry: bash -c 'cd skills/persona-swe/scripts && go run cmd/gitseep/main.go -y'
-        language: system
-        pass_filenames: false
-        require_serial: true
-        stages: [manual]
-
-      - id: gitseep-check
-        name: Validate GitSeep Stratigraphy
-        entry: bash -c 'cd skills/persona-swe/scripts && go run cmd/gitseep/main.go check'
-        language: system
-        pass_filenames: false
         require_serial: true
 
       # --- SECTION: Skills & Personas ---
@@ -206,35 +171,17 @@ repos:
 
       - id: pytest-skills
         name: Skills Unit Tests (Pytest)
-        entry: |
-          bash -c '
-            targets=()
-            if [ $# -gt 0 ]; then
-              for f in "$@"; do
-                if [[ "$f" == *.py ]] && [[ "$f" == */tests/* ]]; then
-                  targets+=("$f")
-                else
-                  skill_dir=$(echo "$f" | cut -d/ -f1,2)
-                  if [ -d "$skill_dir/tests" ] && compgen -G "$skill_dir/tests/*.py" >/dev/null; then
-                    targets+=("$skill_dir/tests")
-                  fi
-                fi
-              done
-            fi
-            if [ ${#targets[@]} -gt 0 ]; then
-              unique_targets=($(echo "${targets[@]}" | tr " " "\n" | sort -u))
-              exec pytest "${unique_targets[@]}"
-            fi
-            for d in skills/*/tests; do
-              [ -d "$d" ] || continue
-              if compgen -G "$d/*.py" >/dev/null; then
-                pytest "$d"
-              fi
-            done
-          ' --
+        entry: uv run --group dev pytest skills/
         language: system
-        pass_filenames: true
         files: ^skills/
+        pass_filenames: false
+
+      - id: pytest-pipelines
+        name: Pipelines Unit Tests (Pytest)
+        entry: uv run --group dev pytest infra/modules/cicd_pipelines/tests/
+        language: system
+        files: ^infra/modules/cicd_pipelines/(scripts|tests)/
+        pass_filenames: false
 
       - id: go-test-persona
         name: Persona Scripts Unit Tests (Go)

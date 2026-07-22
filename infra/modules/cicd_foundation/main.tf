@@ -43,7 +43,7 @@ locals {
     "tf_module_github_org"  = "GoogleCloudPlatform"
     "tf_module_github_repo" = "cicd-foundation"
     "tf_module_name"        = "cicd_foundation"
-    "tf_module_version"     = "v5-0-1"
+    "tf_module_version"     = "v6-0-0"
   }
   # merge the default labels with the user-provided labels and convert to lowercase
   common_labels = {

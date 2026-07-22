@@ -1,34 +1,51 @@
+<!--
+Copyright 2026 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 # Terraform Module establishing a CI/CD foundation (`cicd_foundation`)
 
 This module provides a comprehensive CI/CD foundation on Google Cloud by
 integrating CI/CD pipelines with managed development environments. It uses the
 `cicd_pipelines` and `cicd_workstations` submodules to provision and configure:
 
-*   **CI/CD Pipelines**: Sets up secure pipelines using Cloud Build, Artifact
-    Registry, and Cloud Deploy for building, scanning, and deploying
-    applications to Cloud Run or GKE. It also supports building custom images
-    for Cloud Workstations, including scheduled rebuilds for patching.
-*   **Managed Development Environments**: Sets up Cloud Workstations, allowing
-    developers to use secure, pre-configured environments based on standard or
-    custom images.
+- **CI/CD Pipelines**: Sets up secure pipelines using Cloud Build, Artifact
+  Registry, and Cloud Deploy for building, scanning, and deploying
+  applications to Cloud Run or GKE. It also supports building custom images
+  for Cloud Workstations, including scheduled rebuilds for patching.
+- **Managed Development Environments**: Sets up Cloud Workstations, allowing
+  developers to use secure, pre-configured environments based on standard or
+  custom images.
 
 This foundation allows teams to automate application delivery and provide
 developers with consistent and secure development environments.
 
 ## Features
 
-*   Combines CI/CD pipelines for applications and Cloud Workstation custom
-    images.
-*   Provides managed Cloud Workstation environments via the `cicd_workstations`
-    module.
-*   Supports both Secure Source Manager and GitHub for triggering builds.
-*   Includes security features like vulnerability scanning and Binary
-    Authorization.
-*   Allows scheduling of Cloud Workstation image rebuilds for security patching.
+- Combines CI/CD pipelines for applications and Cloud Workstation custom
+  images.
+- Provides managed Cloud Workstation environments via the `cicd_workstations`
+  module.
+- Supports both Secure Source Manager and GitHub for triggering builds.
+- Includes security features like vulnerability scanning and Binary
+  Authorization.
+- Allows scheduling of Cloud Workstation image rebuilds for security patching.
 
 ## Usage
 
 Below is an example that sets up:
+
 1.  A CI/CD pipeline for a Cloud Run application `my-app-1`.
 2.  A CI/CD pipeline for a custom Cloud Workstation image `ide-1`, with a
     daily rebuild.
@@ -37,7 +54,7 @@ Below is an example that sets up:
 
 ```terraform
 module "cicd_foundation" {
-  source = "github.com/GoogleCloudPlatform/cicd-foundation//infra/modules/cicd_foundation?ref=v5.0.1"
+  source = "github.com/GoogleCloudPlatform/cicd-foundation//infra/modules/cicd_foundation?ref=v6.0.0"
 
   project_id = "your-gcp-project-id"
 
@@ -89,8 +106,8 @@ module "cicd_foundation" {
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_apps"></a> [apps](#input\_apps) | Map of applications to be deployed. | <pre>map(object({<br/>    build = optional(object({<br/>      # The relative path to the directory containing skaffold.yaml within the repository.<br/>      skaffold_path = optional(string)<br/>      # The timeout for the build in seconds.<br/>      timeout_seconds = optional(number)<br/>      # The machine type to use for the build.<br/>      machine_type = optional(string)<br/>      env          = optional(map(string), {})<br/>      })<br/>    )<br/>    runtime = optional(string, "cloudrun"),<br/>    stages  = optional(map(map(string))),<br/>    git_repo = optional(object({<br/>      url    = string<br/>      branch = string<br/>    })),<br/>    github = optional(object({<br/>      owner          = string<br/>      repo           = string<br/>      branch_pattern = string<br/>    })),<br/>    ssm = optional(object({<br/>      instance_id = string<br/>      repo_name   = string<br/>      branch      = string<br/>    }))<br/>  }))</pre> | `{}` | no |
+|------|-------------|------|---------|:--------:|
+| <a name="input_apps"></a> [apps](#input\_apps) | Map of applications to be deployed. | <pre>map(object({<br/>    build = optional(object({<br/>      # The relative path to the directory containing skaffold.yaml within the repository.<br/>      skaffold_path = optional(string)<br/>      # The timeout for the build in seconds.<br/>      timeout_seconds = optional(number)<br/>      # The machine type to use for the build.<br/>      machine_type = optional(string)<br/>      env          = optional(map(string), {})<br/>      })<br/>    )<br/>    runtime = optional(string),<br/>    stages  = optional(map(map(string))),<br/>    git_repo = optional(object({<br/>      url    = string<br/>      branch = string<br/>    })),<br/>    github = optional(object({<br/>      owner          = string<br/>      repo           = string<br/>      branch_pattern = string<br/>    })),<br/>    ssm = optional(object({<br/>      instance_id = string<br/>      repo_name   = string<br/>      branch      = string<br/>    })),<br/>    agents = optional(map(map(object({<br/>      enabled       = optional(bool, false)<br/>      model         = optional(string)<br/>      location      = optional(string)<br/>      personas      = optional(list(string))<br/>      instructions  = optional(string)<br/>      prompt        = optional(string)<br/>      allow_failure = optional(bool, true)<br/>    }))), {})<br/>  }))</pre> | `{}` | no |
 | <a name="input_apps_directory"></a> [apps\_directory](#input\_apps\_directory) | The root directory for applications in the repository. This is used to construct the path to an application's source code if `skaffold_path` is not specified. | `string` | `"apps"` | no |
 | <a name="input_artifact_registry_id"></a> [artifact\_registry\_id](#input\_artifact\_registry\_id) | The ID of an existing Docker Artifact Registry to use. If null, a new one will be created. | `string` | `null` | no |
 | <a name="input_artifact_registry_name"></a> [artifact\_registry\_name](#input\_artifact\_registry\_name) | The name of the Artifact Registry repository to create if artifact\_registry\_id is null. | `string` | `"cicd-foundation"` | no |
@@ -99,6 +116,7 @@ module "cicd_foundation" {
 | <a name="input_binary_authorization_always_create"></a> [binary\_authorization\_always\_create](#input\_binary\_authorization\_always\_create) | If true, create Binary Authorization resources even if kritis\_signer\_image is not provided. | `bool` | `false` | no |
 | <a name="input_boot_disk_size_gb_default"></a> [boot\_disk\_size\_gb\_default](#input\_boot\_disk\_size\_gb\_default) | The default boot disk size in GB for Cloud Workstation instances. | `number` | `100` | no |
 | <a name="input_build_machine_type_default"></a> [build\_machine\_type\_default](#input\_build\_machine\_type\_default) | The default machine type to use for Cloud Build jobs. | `string` | `"UNSPECIFIED"` | no |
+| <a name="input_build_source_retention_days"></a> [build\_source\_retention\_days](#input\_build\_source\_retention\_days) | The number of days to retain Cloud Build source archives in the GCS staging bucket before deletion. | `number` | `7` | no |
 | <a name="input_build_timeout_default_seconds"></a> [build\_timeout\_default\_seconds](#input\_build\_timeout\_default\_seconds) | The default timeout in seconds for Cloud Build jobs. | `number` | `7200` | no |
 | <a name="input_canary_route_update_wait_time_seconds"></a> [canary\_route\_update\_wait\_time\_seconds](#input\_canary\_route\_update\_wait\_time\_seconds) | The time (in seconds) to wait for network route updates during GKE canary deployments. | `number` | `60` | no |
 | <a name="input_canary_verify"></a> [canary\_verify](#input\_canary\_verify) | Whether to enable verification steps for canary deployments in Cloud Deploy. | `bool` | `true` | no |
@@ -118,6 +136,11 @@ module "cicd_foundation" {
 | <a name="input_cws_image_build_runner_role_title"></a> [cws\_image\_build\_runner\_role\_title](#input\_cws\_image\_build\_runner\_role\_title) | The title for the custom IAM role for the Cloud Workstation Image Build Runner. | `string` | `"Cloud Workstation Image Build Runner"` | no |
 | <a name="input_cws_scopes"></a> [cws\_scopes](#input\_cws\_scopes) | The scope of the Cloud Workstations Service Account. | `list(string)` | <pre>[<br/>  "https://www.googleapis.com/auth/cloud-platform"<br/>]</pre> | no |
 | <a name="input_cws_service_account_name"></a> [cws\_service\_account\_name](#input\_cws\_service\_account\_name) | Name of the Cloud Workstations Service Account. | `string` | `"workstations"` | no |
+| <a name="input_default_agentic_instructions"></a> [default\_agentic\_instructions](#input\_default\_agentic\_instructions) | The default system instructions passed to the agent to define its behavior. | `string` | `"You are an automated platform review agent. Adopt the requested personas to audit the workspace codebase changes."` | no |
+| <a name="input_default_agentic_location"></a> [default\_agentic\_location](#input\_default\_agentic\_location) | The default Agent Platform endpoint location for the agentic review models. | `string` | `"global"` | no |
+| <a name="input_default_agentic_model"></a> [default\_agentic\_model](#input\_default\_agentic\_model) | The default Gemini model used for the agentic review (e.g., 'gemini-3.5-flash'). | `string` | `"gemini-3.5-flash"` | no |
+| <a name="input_default_agentic_personas"></a> [default\_agentic\_personas](#input\_default\_agentic\_personas) | The default list of persona profiles to run during the automated review (e.g., 'swe', 'security'). | `list(string)` | <pre>[<br/>  "swe",<br/>  "security"<br/>]</pre> | no |
+| <a name="input_default_agentic_prompt"></a> [default\_agentic\_prompt](#input\_default\_agentic\_prompt) | The default prompt passed to each persona reviewer. | `string` | `"Analyze the modified files in the workspace. Audit the code against your persona's mandates and guidelines, highlighting any issues or improvements needed."` | no |
 | <a name="input_default_ci_schedule"></a> [default\_ci\_schedule](#input\_default\_ci\_schedule) | The default cron schedule for continuous integration triggers in Cloud Scheduler if not specified in the application config. | `string` | `"0 0 * * *"` | no |
 | <a name="input_deploy_region"></a> [deploy\_region](#input\_deploy\_region) | The region to use for Cloud Deploy resources. | `string` | `"us-central1"` | no |
 | <a name="input_disable_public_ip_addresses_default"></a> [disable\_public\_ip\_addresses\_default](#input\_disable\_public\_ip\_addresses\_default) | The default for disabling public IP addresses for Cloud Workstation instances. | `bool` | `false` | no |
@@ -173,7 +196,7 @@ module "cicd_foundation" {
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_cloud_build_trigger_github_connection_needed"></a> [cloud\_build\_trigger\_github\_connection\_needed](#output\_cloud\_build\_trigger\_github\_connection\_needed) | Instructions to connect GitHub repository if using GitHub source. |
 | <a name="output_cloud_build_trigger_ids"></a> [cloud\_build\_trigger\_ids](#output\_cloud\_build\_trigger\_ids) | The full resource IDs of the Cloud Build triggers. |
 | <a name="output_cloud_build_trigger_trigger_ids"></a> [cloud\_build\_trigger\_trigger\_ids](#output\_cloud\_build\_trigger\_trigger\_ids) | The unique short IDs of the Cloud Build triggers. |

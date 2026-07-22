@@ -1,0 +1,8 @@
+{
+  "name": "Code-OSS DevContainer (Node & Terraform)",
+  "image": "us-central1-docker.pkg.dev/cloud-workstations-images/predefined/code-oss:latest",
+  "features": {
+    "ghcr.io/devcontainers/features/terraform:1": {},
+    "ghcr.io/devcontainers/features/node:2": {}
+  }
+}

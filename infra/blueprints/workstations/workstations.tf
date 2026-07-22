@@ -13,19 +13,26 @@
 # limitations under the License.
 
 module "cicd_foundation" {
-  source = "github.com/GoogleCloudPlatform/cicd-foundation//infra/modules/cicd_foundation?ref=v5.0.1"
+  source = "github.com/GoogleCloudPlatform/cicd-foundation//infra/modules/cicd_foundation?ref=v6.0.0"
 
   project_id  = data.google_project.project.project_id
   enable_apis = var.enable_apis
   # go/keep-sorted start
+  apps                                        = var.apps
   artifact_registry_region                    = var.artifact_registry_region
   boot_disk_size_gb_default                   = var.boot_disk_size_gb_default
   build_machine_type_default                  = var.build_machine_type_default
+  build_source_retention_days                 = var.build_source_retention_days
   build_timeout_default_seconds               = var.build_timeout_default_seconds
   cloud_build_region                          = var.cloud_build_region
   cws_clusters                                = var.cws_clusters
   cws_configs                                 = local.cws_configs_product
   cws_custom_images                           = var.cws_custom_images
+  default_agentic_instructions                = var.default_agentic_instructions
+  default_agentic_location                    = var.default_agentic_location
+  default_agentic_model                       = var.default_agentic_model
+  default_agentic_personas                    = var.default_agentic_personas
+  default_agentic_prompt                      = var.default_agentic_prompt
   disable_public_ip_addresses_default         = var.disable_public_ip_addresses_default
   enable_nested_virtualization_default        = var.enable_nested_virtualization_default
   git_branch_trigger                          = var.git_branch_trigger

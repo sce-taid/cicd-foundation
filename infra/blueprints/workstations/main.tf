@@ -81,6 +81,7 @@ module "project_services" {
   enable_apis                 = var.enable_apis
   disable_services_on_destroy = false
   activate_apis = [
+    "aiplatform.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "compute.googleapis.com",
     "monitoring.googleapis.com",

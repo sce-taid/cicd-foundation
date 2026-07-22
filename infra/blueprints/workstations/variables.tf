@@ -239,6 +239,12 @@ variable "build_machine_type_default" {
   default     = "UNSPECIFIED"
 }
 
+variable "build_source_retention_days" {
+  type        = number
+  description = "The number of days to retain Cloud Build source archives in the GCS staging bucket before deletion."
+  default     = 7
+}
+
 variable "build_timeout_default_seconds" {
   type        = number
   description = "The default timeout in seconds for Cloud Build jobs."
@@ -458,3 +464,71 @@ variable "android_targets" {
   EOT
   default     = {}
 }
+
+variable "apps" {
+  type = map(object({
+    build = optional(object({
+      skaffold_path   = optional(string)
+      timeout_seconds = optional(number)
+      machine_type    = optional(string)
+      env             = optional(map(string), {})
+    }))
+    runtime = optional(string)
+    stages  = optional(map(map(string)))
+    git_repo = optional(object({
+      url    = string
+      branch = string
+    }))
+    github = optional(object({
+      owner          = string
+      repo           = string
+      branch_pattern = string
+    }))
+    ssm = optional(object({
+      instance_id = string
+      repo_name   = string
+      branch      = string
+    })),
+    agents = optional(map(map(object({
+      enabled       = optional(bool, false)
+      model         = optional(string)
+      personas      = optional(list(string))
+      instructions  = optional(string)
+      prompt        = optional(string)
+      allow_failure = optional(bool, true)
+    }))), {})
+  }))
+  description = "Map of applications to be built and triggered."
+  default     = {}
+}
+
+variable "default_agentic_model" {
+  type        = string
+  description = "The default Gemini model used for the agentic review (e.g., 'gemini-3.5-flash')."
+  default     = "gemini-3.5-flash"
+}
+
+variable "default_agentic_location" {
+  type        = string
+  description = "The default Agent Platform endpoint location for the agentic review models."
+  default     = "global"
+}
+
+variable "default_agentic_personas" {
+  type        = list(string)
+  description = "The default list of persona profiles to run during the automated review (e.g., 'swe', 'security')."
+  default     = ["swe", "security"]
+}
+
+variable "default_agentic_instructions" {
+  type        = string
+  description = "The default system instructions passed to the agent to define its behavior."
+  default     = "You are an automated platform review agent. Adopt the requested personas to audit the workspace codebase changes."
+}
+
+variable "default_agentic_prompt" {
+  type        = string
+  description = "The default prompt passed to each persona reviewer."
+  default     = "Analyze the modified files in the workspace. Audit the code against your persona's mandates and guidelines, highlighting any issues or improvements needed."
+}
+

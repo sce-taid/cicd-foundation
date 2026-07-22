@@ -24,9 +24,9 @@ Select your role to find the most relevant documentation and workflows:
 
 - **[Architecture & Patterns](docs/design.md)**: Systemd orchestration, hook system, and developer patterns.
 - **[Technical Requirements](docs/requirements.md)**: Functional and non-functional requirements for the GNOME layer.
-- **[Operators / SREs](../../../docs/playbooks/troubleshooting.md)**: Monitoring, logging, and troubleshooting.
+- **[Operators / SREs](../../../skills/persona-sre/references/troubleshooting.md)**: Monitoring, logging, and troubleshooting.
 - **[Security & Compliance](../../../docs/style_guides/docker.md)**: Hardening, ephemeral credentials, and SBOM.
-- **[Hackathon Participants](../../../docs/playbooks/hackathon_guide.md)**: Rapid prototyping and blueprint extension.
+- **[Hackathon Participants](../../../docs/hackathon_guide.md)**: Rapid prototyping and blueprint extension.
 
 ## 🏗️ Architectural Modules
 

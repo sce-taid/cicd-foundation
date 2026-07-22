@@ -1,0 +1,111 @@
+#!/bin/bash
+
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -euo pipefail
+
+# Define the bootstrap lookup to find the repository root
+find_repo_root() {
+  local dir="${1}"
+  while [[ "${dir}" != "/" ]]; do
+    if [[ -f "${dir}/skills/common.sh" ]]; then
+      echo "${dir}"
+      return 0
+    fi
+    dir="$(dirname "${dir}")"
+  done
+  return 1
+}
+
+# Source the central registry
+PROJECT_ROOT="$(find_repo_root "$(pwd)")"
+# shellcheck disable=SC1091
+source "${PROJECT_ROOT}/skills/common.sh"
+
+# Helper function to check if a devcontainer configuration uses features.
+# It strips single-line comments before running grep to avoid false positives.
+has_devcontainer_features() {
+  local config_file="${1}"
+
+  # Pattern 1: Match and remove lines starting with optional whitespace and //
+  # Pattern 2: Match and remove inline comments starting with whitespace and //
+  sed -e 's/^[[:space:]]*\/\/.*//g' \
+      -e 's/[[:space:]]\/\/.*//g' \
+      "${config_file}" | grep -q '"features"'
+}
+
+main() {
+  # Check if target image tag is provided
+  if [[ -z "${1:-}" ]]; then
+    error "Target image name/tag must be supplied (usually \$IMAGE in Skaffold).\nUsage: ${0} <image_tag> [workspace_folder]"
+  fi
+
+  local image_name="${1}"
+  local workspace_dir="${2:-.}"
+
+  # Derive cache tag name in Artifact Registry (append -cache to the repository tag)
+  local cache_ref="${image_name}-cache"
+
+  log "========================================================="
+  log " 📦 Running Cached Devcontainer Build"
+  log " Target Image: ${image_name}"
+  log " Cache Ref:   ${cache_ref}"
+  log " Workspace:   ${workspace_dir}"
+  log "========================================================="
+
+  # Check if the devcontainer configuration uses features
+  local has_features="false"
+  local config_paths=(
+    "${workspace_dir}/.devcontainer/devcontainer.json"
+    "${workspace_dir}/.devcontainer.json"
+  )
+  for config_path in "${config_paths[@]}"; do
+    if [[ -f "${config_path}" ]]; then
+      if has_devcontainer_features "${config_path}"; then
+        has_features="true"
+        break
+      fi
+    fi
+  done
+
+  if [[ "${has_features}" == "true" ]]; then
+    log "⚠️ Devcontainer uses features. Registry caching is disabled because docker-container BuildKit driver cannot access local temp images."
+    # Use the default builder (using docker driver)
+    docker buildx use default
+
+    # Execute devcontainer build WITHOUT buildx registry cache parameters
+    devcontainer build \
+      --workspace-folder "${workspace_dir}" \
+      --image-name "${image_name}"
+  else
+    # Initialize and select a buildx builder using the docker-container driver
+    # to support registry cache export (--cache-to type=registry)
+    docker buildx create --use --driver docker-container --name devcontainer-builder || docker buildx use devcontainer-builder
+
+    # Execute devcontainer build with BuildKit registry cache parameters
+    devcontainer build \
+      --workspace-folder "${workspace_dir}" \
+      --image-name "${image_name}" \
+      --cache-from "type=registry,ref=${cache_ref}" \
+      --cache-to "type=registry,ref=${cache_ref},mode=max"
+  fi
+
+  log "🚀 Pushing compiled devcontainer image to Artifact Registry..."
+  docker push "${image_name}"
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  main "$@"
+fi

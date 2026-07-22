@@ -44,7 +44,7 @@ To ensure consistency and compatibility across the project, adhere to the follow
 | :------------------------------------------------------------- | :---------------------------------------------------------------- |
 | [design.md](design.md)                                         | Core architecture, Systemd orchestration, and developer patterns. |
 | [requirements.md](requirements.md)                             | Functional and non-functional requirements for the GNOME layer.   |
-| [deployment_guide.md](../../docs/deployment_guide.md)          | Infrastructure and build pipeline details.                        |
+| [admin_guide.md](../../docs/iac/admin_guide.md)                | Infrastructure and build pipeline details.                        |
 | [ux_standards.md](../../preflight/docs/ux_standards.md)        | Accessibility and design language for the desktop.                |
 | [software_bill_of_materials.md](software_bill_of_materials.md) | Tracking of bundled OSS components and licenses.                  |
 | [environment_variables.md](environment_variables.md)           | Runtime and build-time configuration reference.                   |

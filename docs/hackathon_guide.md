@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# Hackathon Organizer Guide: GNOME Desktop
+# Hackathon Organizer Guide
 
-This guide is designed for hackathon organizers, cloud architects, and technical mentors who want to deploy a high-performance, containerized GNOME desktop environment for event participants using the [Google Cloud Workstations](https://cloud.google.com/workstations) service and the [cicd-foundation](https://github.com/GoogleCloudPlatform/cicd-foundation) framework.
+This guide is designed for hackathon organizers, cloud architects, and technical mentors who want to deploy high-performance, containerized developer workstation environments for event participants using the [Google Cloud Workstations](https://cloud.google.com/workstations) service and the [cicd-foundation](https://github.com/GoogleCloudPlatform/cicd-foundation) framework.
 
 ## 1. Roles & Responsibilities
 
@@ -128,7 +128,7 @@ cws_configs = {
 
 For detailed instructions on running the Terraform commands, monitoring the build, and connecting via SSH, refer to the deployment guide:
 
-👉 **[Infrastructure & Deployment Guide](../deployment_guide.md)**
+👉 **[Infrastructure & Deployment Guide](../iac/admin_guide.md)**
 
 ## 3. Governance & Constraints
 

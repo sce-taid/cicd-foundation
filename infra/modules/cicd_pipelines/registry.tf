@@ -41,7 +41,7 @@ resource "google_artifact_registry_repository_iam_member" "reader" {
   for_each = toset(concat([
     module.service_account_cloud_build.iam_email
     ],
-    length(local.workstation_apps) > 0 ? [
+    length(local.scheduled_apps) > 0 ? [
       module.cws_image_build_runner_service_account[0].iam_email
     ] : [],
     var.artifact_registry_readers
@@ -58,6 +58,6 @@ resource "google_artifact_registry_repository_iam_member" "writer" {
   project    = local.artifact_registry_project_id
   location   = var.artifact_registry_region
   repository = data.google_artifact_registry_repository.container_repository.id
-  role       = "roles/artifactregistry.writer"
+  role       = "roles/artifactregistry.repoAdmin"
   member     = module.service_account_cloud_build.iam_email
 }

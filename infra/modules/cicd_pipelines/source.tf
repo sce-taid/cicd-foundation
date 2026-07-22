@@ -13,7 +13,7 @@
 # limitations under the License.
 
 locals {
-  # go/keep-sorted start
+  # go/keep-sorted start block=yes
   cloudbuild_service_agent        = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-cloudbuild.iam.gserviceaccount.com"
   cloudbuild_webhook_uri_template = "https://cloudbuild.googleapis.com/v1/projects/%s/locations/%s/triggers/%s:webhook"
   create_ssm_ca_pool              = local.source.ssm && !local.ssm_instance_is_provided && var.secure_source_manager_create_ca_pool && var.secure_source_manager_ca_pool == null
@@ -341,5 +341,6 @@ resource "null_resource" "run_git_repo_trigger" {
 
   depends_on = [
     google_cloudbuild_trigger.ci_pipeline,
+    null_resource.build_bootstrap_runner,
   ]
 }
