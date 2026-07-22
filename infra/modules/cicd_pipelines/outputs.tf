@@ -29,21 +29,21 @@ output "webhook_trigger_secret_name" {
 # go/keep-sorted start block=yes newline_separated=yes
 output "secure_source_manager_instance_git_http" {
   description = "The Git HTTP URI of the created Secure Source Manager instance."
-  value = local.source.ssm && ! local.ssm_instance_is_provided ? (
+  value = local.source.ssm && !local.ssm_instance_is_provided ? (
     google_secure_source_manager_instance.cicd_foundation[0].host_config[0].git_http
   ) : null
 }
 
 output "secure_source_manager_instance_git_ssh" {
   description = "The Git SSH URI of the created Secure Source Manager instance."
-  value = local.source.ssm && ! local.ssm_instance_is_provided ? (
+  value = local.source.ssm && !local.ssm_instance_is_provided ? (
     google_secure_source_manager_instance.cicd_foundation[0].host_config[0].git_ssh
   ) : null
 }
 
 output "secure_source_manager_instance_html" {
   description = "The HTML hostname of the Secure Source Manager instance."
-  value = local.source.ssm && ! local.ssm_instance_is_provided ? (
+  value = local.source.ssm && !local.ssm_instance_is_provided ? (
     google_secure_source_manager_instance.cicd_foundation[0].host_config[0].html
   ) : null
 }
@@ -155,14 +155,14 @@ output "artifact_registry_repository_uri" {
 # go/keep-sorted start block=yes newline_separated=yes
 output "cws_image_build_runner_service_account_email" {
   description = "The email of the Cloud Workstation Image Build Runner service account."
-  value = length(local.workstation_apps) > 0 ? (
+  value = length(local.scheduled_apps) > 0 ? (
     module.cws_image_build_runner_service_account[0].email
   ) : null
 }
 
 output "cws_image_build_runner_service_account_id" {
   description = "The ID of the Cloud Workstation Image Build Runner service account."
-  value = length(local.workstation_apps) > 0 ? (
+  value = length(local.scheduled_apps) > 0 ? (
     module.cws_image_build_runner_service_account[0].id
   ) : null
 }

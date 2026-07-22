@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# shellcheck disable=SC2034,SC2157,SC2086
+
+/bin/grep -Po '"tag":"\K[^"]*' "${_SKAFFOLD_OUTPUT}" > images.txt
+IMAGES=$(/bin/cat images.txt)
+for IMAGE in $$IMAGES; do
+  if [ -z "$$IMAGE" ]; then continue; fi
+  CLEANED_IMAGE=$(/bin/echo "$$IMAGE" | /bin/sed -E 's/:[^/@]+@/@/')
+  IMAGE_NAME=$(/bin/echo "$$IMAGE" | /bin/sed -E 's/:[^/@]+@/@/' | /bin/sed -E 's/@[^/]+$//' | /bin/sed -E 's/:[^/]+$//')
+  DIGEST=$(gcloud artifacts docker images describe "$$CLEANED_IMAGE" --format='value(image_summary.digest)')
+  IMAGE_DIGEST="$${IMAGE_NAME}@$${DIGEST}"
+  DIGEST_HASH=$(/bin/echo "$$IMAGE_DIGEST" | /bin/sed 's/.*@sha256://')
+  DIGEST_FILENAME="$${DIGEST_HASH}.digest"
+  echo "$$IMAGE_DIGEST" > "$$DIGEST_FILENAME"
+  gcloud artifacts docker tags add "$$CLEANED_IMAGE" "$${IMAGE_NAME}:latest"
+done

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 locals {
-  # go/keep-sorted start newline_separated=yes
+  # go/keep-sorted start block=yes newline_separated=yes
   activate_apis = concat([
     "cloudresourcemanager.googleapis.com",
     "secretmanager.googleapis.com",
@@ -26,13 +26,13 @@ locals {
     "binaryauthorization.googleapis.com",
     ],
     length(local.cloud_deploy_apps) > 0 ? ["clouddeploy.googleapis.com"] : [],
-    length(local.workstation_apps) > 0 ? ["cloudscheduler.googleapis.com"] : [],
+    length(local.scheduled_apps) > 0 ? ["cloudscheduler.googleapis.com"] : [],
     local.source.ssm ? ["apikeys.googleapis.com", "securesourcemanager.googleapis.com"] : []
   )
 
   app_source = {
     for k, v in var.apps : k => {
-      # go/keep-sorted start
+      # go/keep-sorted start block=yes
       git_repo = v.git_repo
       github = v.github != null ? v.github : (v.ssm == null && v.git_repo == null && local.source.github ? {
         owner          = var.github_owner
@@ -79,6 +79,21 @@ locals {
     )
   }
 
+  ci_apps_available_secrets = {
+    for k, v in local.ci_apps_secrets_filtered : k => [
+      for item in v : {
+        env = item.env_name
+        version_name = (
+          startswith(item.secret_ref, "projects/") ?
+          item.secret_ref :
+          length(split("/", item.secret_ref)) == 2 ?
+          "projects/${local.build_project_id}/secrets/${split("/", item.secret_ref)[0]}/versions/${split("/", item.secret_ref)[1]}" :
+          "projects/${local.build_project_id}/secrets/${item.secret_ref}/versions/latest"
+        )
+      }
+    ]
+  }
+
   # Boolean flags for each application source combination.
   # This helps in conditionally configuring build steps and trigger settings.
   ci_apps_flags = {
@@ -91,9 +106,25 @@ locals {
     }
   }
 
+  ci_apps_secrets = {
+    for app_source_key, app_source_config in local.ci_apps : app_source_key => [
+      for env_key, env_val in try(app_source_config.config.build.env, {}) : {
+        env_name   = env_key
+        is_secret  = startswith(env_val, "sm://")
+        secret_ref = startswith(env_val, "sm://") ? replace(env_val, "sm://", "") : ""
+      }
+    ]
+  }
+
+  ci_apps_secrets_filtered = {
+    for k, v in local.ci_apps_secrets : k => [
+      for item in v : item if item.is_secret
+    ]
+  }
+
   cloud_deploy_apps = {
     for key, value in var.apps : key => value
-    if contains(local.cloud_deploy_supported_runtimes, value.runtime)
+    if value.runtime != null && contains(local.cloud_deploy_supported_runtimes, value.runtime)
   }
 
   cloud_deploy_supported_runtimes = ["cloudrun", "gke"]
@@ -109,12 +140,18 @@ locals {
     "tf_module_github_org"  = "GoogleCloudPlatform"
     "tf_module_github_repo" = "cicd-foundation"
     "tf_module_name"        = "cicd_pipelines"
-    "tf_module_version"     = "v5-0-1"
+    "tf_module_version"     = "v6-0-0"
   }
 
   kms_project_id = data.google_project.project.project_id
 
+  needs_agent_platform_access = anytrue([
+    for app_name, app_config in var.apps : try(app_config.agents["pre-build"]["review"].enabled, false)
+  ])
+
   prefix = var.namespace == "" ? "" : "${var.namespace}-"
+
+  scheduled_apps = var.apps
 
   source = {
     github = var.github_owner != null && var.github_repo != null

@@ -29,6 +29,7 @@ module "cicd_pipelines" {
   artifact_registry_region                    = var.artifact_registry_region
   binary_authorization_always_create          = var.binary_authorization_always_create
   build_machine_type_default                  = var.build_machine_type_default
+  build_source_retention_days                 = var.build_source_retention_days
   build_timeout_default_seconds               = var.build_timeout_default_seconds
   canary_route_update_wait_time_seconds       = var.canary_route_update_wait_time_seconds
   canary_verify                               = var.canary_verify
@@ -43,6 +44,11 @@ module "cicd_pipelines" {
   cws_image_build_runner_role_create          = var.cws_image_build_runner_role_create
   cws_image_build_runner_role_id              = var.cws_image_build_runner_role_id
   cws_image_build_runner_role_title           = var.cws_image_build_runner_role_title
+  default_agentic_instructions                = var.default_agentic_instructions
+  default_agentic_location                    = var.default_agentic_location
+  default_agentic_model                       = var.default_agentic_model
+  default_agentic_personas                    = var.default_agentic_personas
+  default_agentic_prompt                      = var.default_agentic_prompt
   default_ci_schedule                         = var.default_ci_schedule
   deploy_region                               = var.deploy_region
   docker_image_tag                            = var.docker_image_tag

@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# shellcheck disable=SC2329
+
 load ../test_helper.bash
 
 setup() {
@@ -53,25 +55,25 @@ setup() {
 }
 
 @test "download_and_validate calls curl and sha256sum with correct arguments" {
-  run download_and_validate "http://example.com/file.tar.gz" "12345" "file.tar.gz"
+  run download_and_validate "http://example.com/file.tar.gz" "12345" "${BATS_TEST_TMPDIR}/file.tar.gz"
 
   [ "$status" -eq 0 ]
   [[ "$output" == *"MOCK_CURL:"* ]]
-  [[ "$output" == *"-o file.tar.gz"* ]]
+  [[ "$output" == *"-o ${BATS_TEST_TMPDIR}/file.tar.gz"* ]]
   [[ "$output" == *"http://example.com/file.tar.gz"* ]]
   [[ "$output" == *"MOCK_SHA256SUM: Checking hash"* ]]
 }
 
 @test "install_binary_from_tarball calls all the right commands" {
-  run install_binary_from_tarball "http://example.com/file.tar.gz" "12345" "file.tar.gz" "file" "/usr/local/bin" "my-file" "my-alias"
+  run install_binary_from_tarball "http://example.com/file.tar.gz" "12345" "${BATS_TEST_TMPDIR}/file.tar.gz" "file" "/usr/local/bin" "my-file" "my-alias"
 
   [ "$status" -eq 0 ]
   [[ "$output" == *"MOCK_CURL:"* ]]
-  [[ "$output" == *"-o file.tar.gz"* ]]
+  [[ "$output" == *"-o ${BATS_TEST_TMPDIR}/file.tar.gz"* ]]
   [[ "$output" == *"http://example.com/file.tar.gz"* ]]
   [[ "$output" == *"MOCK_SHA256SUM: Checking hash"* ]]
-  [[ "$output" == *"MOCK_TAR: -xzf file.tar.gz file"* ]]
+  [[ "$output" == *"MOCK_TAR: -xzf ${BATS_TEST_TMPDIR}/file.tar.gz file"* ]]
   [[ "$output" == *"MOCK_MV: file /usr/local/bin/my-file"* ]]
   [[ "$output" == *"MOCK_LN: -s my-file /usr/local/bin/my-alias"* ]]
-  [[ "$output" == *"MOCK_RM: file.tar.gz"* ]]
+  [[ "$output" == *"MOCK_RM: ${BATS_TEST_TMPDIR}/file.tar.gz"* ]]
 }

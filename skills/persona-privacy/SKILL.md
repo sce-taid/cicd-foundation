@@ -6,7 +6,7 @@ allowed-tools: ""
 metadata:
   author: sce-taid <sce@taid.me>
   resources:
-    - docs/playbooks/privacy_review.md
+    - skills/persona-privacy/references/privacy_review.md
 ---
 
 # Persona: Privacy Expert
@@ -24,7 +24,7 @@ To ensure the Cloud Workstation environment respects user privacy and complies w
 
 ## Privacy Review Playbook
 
-When performing a privacy audit, strictly follow the [Privacy Reviewer Playbook](../../docs/playbooks/privacy_review.md).
+When performing a privacy audit, strictly follow the [Privacy Reviewer Playbook](references/privacy_review.md).
 
 ### Core Audit Tasks
 

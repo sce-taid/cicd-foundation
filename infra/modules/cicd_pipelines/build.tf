@@ -30,7 +30,7 @@ locals {
         (local.ci_apps_flags[app_source_key].needs_clone_step) ? [
           # Clones the source repository into the workspace.
           {
-            # go/keep-sorted start prefix_order=id,name,wait_for,allow_failure,dir,entrypoint,args
+            # go/keep-sorted start prefix_order=id,name,wait_for,allow_failure,dir,entrypoint,args block=yes
             id            = "clone"
             name          = "gcr.io/cloud-builders/git"
             wait_for      = []
@@ -39,67 +39,74 @@ locals {
             entrypoint    = "/bin/sh"
             args = [
               "-c",
-              <<-EOT
-                git clone "$${_GIT_CLONE_URL}" /workspace
-                if [ "$${_IS_GIT_REPO_WEBHOOK}" = "true" ]; then
-                  cd /workspace
-                  git checkout "$${_GIT_REPO_REF}"
-                elif [ -n "$${COMMIT_SHA}" ]; then
-                  cd /workspace
-                  git reset --hard "$${COMMIT_SHA}"
-                fi
-              EOT
+              file("${path.module}/scripts/clone.sh.template")
             ]
             env = []
+            # go/keep-sorted end
+          }
+        ] : [],
+        try(app_source_config.config.agents["pre-build"]["review"].enabled, false) ? [
+          {
+            # go/keep-sorted start prefix_order=id,name,wait_for,allow_failure,dir,entrypoint,args block=yes
+            id            = "agentic-pre-build-review"
+            name          = local.ci_runner_image
+            wait_for      = (local.ci_apps_flags[app_source_key].needs_clone_step) ? ["clone"] : []
+            allow_failure = try(app_source_config.config.agents["pre-build"]["review"].allow_failure, true)
+            dir           = null
+            entrypoint    = "/usr/bin/python3"
+            args = [
+              "infra/modules/cicd_pipelines/scripts/agentic_runner.py"
+            ]
+            env = [
+              "GCP_PROJECT=${data.google_project.project.project_id}",
+              "GCP_LOCATION=${var.deploy_region}",
+              "MODEL_LOCATION=${coalesce(try(app_source_config.config.agents["pre-build"]["review"].location, null), var.default_agentic_location)}",
+              "GOOGLE_API_USE_CLIENT_CERTIFICATE=false",
+              "SKAFFOLD_PATH=${local.app_skaffold_paths[app_source_config.name]}",
+              "AGENT_MODEL=${coalesce(try(app_source_config.config.agents["pre-build"]["review"].model, null), var.default_agentic_model)}",
+              "AGENT_PERSONAS=${join(" ", coalesce(try(app_source_config.config.agents["pre-build"]["review"].personas, null), var.default_agentic_personas))}",
+              "AGENT_PROMPT=${coalesce(try(app_source_config.config.agents["pre-build"]["review"].prompt, null), var.default_agentic_prompt)}",
+              "AGENT_INSTRUCTIONS=${coalesce(try(app_source_config.config.agents["pre-build"]["review"].instructions, null), var.default_agentic_instructions)}"
+            ]
+            secret_env = []
             # go/keep-sorted end
           }
         ] : [],
         [
           # Builds the application images using Skaffold.
           {
-            # go/keep-sorted start prefix_order=id,name,wait_for,allow_failure,dir,entrypoint,args
+            # go/keep-sorted start prefix_order=id,name,wait_for,allow_failure,dir,entrypoint,args block=yes
             id            = "build"
-            name          = "gcr.io/k8s-skaffold/skaffold:$${_SKAFFOLD_IMAGE_TAG}"
-            wait_for      = (local.ci_apps_flags[app_source_key].needs_clone_step) ? ["clone"] : []
+            name          = local.ci_runner_image
+            wait_for      = (try(app_source_config.config.agents["pre-build"]["review"].enabled, false)) ? ["agentic-pre-build-review"] : ((local.ci_apps_flags[app_source_key].needs_clone_step) ? ["clone"] : [])
             allow_failure = false
             dir           = local.app_skaffold_paths[app_source_config.name]
             entrypoint    = "/bin/sh"
             args = [
               "-c",
-              <<-EOT
-                skaffold build \
-                  --default-repo=$${_SKAFFOLD_DEFAULT_REPO} \
-                  --interactive=false \
-                  --file-output=$${_SKAFFOLD_OUTPUT} \
-                  --quiet=$${_SKAFFOLD_QUIET}
-              EOT
+              file("${path.module}/scripts/build.sh.template")
             ]
-            env = [for k, v in try(app_source_config.config.build.env, {}) : "${k}=${v}"]
+            env = [
+              for k, v in try(app_source_config.config.build.env, {}) : "${k}=${v}"
+              if !startswith(v, "sm://")
+            ]
+            secret_env = [
+              for item in local.ci_apps_available_secrets[app_source_key] : item.env
+            ]
             # go/keep-sorted end
           },
           # Fetches the image digests and pushes a 'latest' tag for each built image.
           {
-            # go/keep-sorted start prefix_order=id,name,wait_for,allow_failure,dir,entrypoint,args
+            # go/keep-sorted start prefix_order=id,name,wait_for,allow_failure,dir,entrypoint,args block=yes
             id            = "fetchImageDigest"
-            name          = "gcr.io/cloud-builders/docker:$${_DOCKER_IMAGE_TAG}"
+            name          = "gcr.io/google.com/cloudsdktool/cloud-sdk:$${_GCLOUD_IMAGE_TAG}"
             wait_for      = ["build"]
             allow_failure = false
             dir           = local.app_skaffold_paths[app_source_config.name]
             entrypoint    = "/bin/sh"
             args = [
               "-c",
-              <<-EOT
-                /bin/grep -Po '"tag":"\K[^"]*' "$${_SKAFFOLD_OUTPUT}" > images.txt
-                IMAGES=$$(/bin/cat images.txt)
-                for IMAGE in $$IMAGES; do
-                  IMAGE_NAME=$$(/bin/echo "$$IMAGE" | /bin/sed 's/\([^:]*\).*/\1/')
-                  DIGEST_FILENAME=$$(/bin/echo "$$IMAGE" | /bin/sed 's/.*@sha256://').digest
-                  docker pull "$$IMAGE" && \
-                  docker tag "$$IMAGE" "$$IMAGE_NAME:latest" && \
-                  docker push "$$IMAGE_NAME:latest" && \
-                  docker image inspect "$$IMAGE" --format='{{index .RepoDigests 0}}' > "$$DIGEST_FILENAME"
-                done
-              EOT
+              file("${path.module}/scripts/fetch_image_digest.sh.template")
             ]
             env = []
             # go/keep-sorted end
@@ -108,7 +115,7 @@ locals {
         local.use_binary_authorization ? [
           # Signs the built images using the Kritis signer.
           {
-            # go/keep-sorted start prefix_order=id,name,wait_for,allow_failure,dir,entrypoint,args
+            # go/keep-sorted start prefix_order=id,name,wait_for,allow_failure,dir,entrypoint,args block=yes
             id            = "vulnsign"
             name          = "$_KRITIS_SIGNER_IMAGE"
             wait_for      = ["fetchImageDigest"]
@@ -117,24 +124,7 @@ locals {
             entrypoint    = "/bin/sh"
             args = [
               "-c",
-              <<-EOT
-                POLICY_FILE=$(mktemp)
-                echo "$${_KRITIS_POLICY_BASE64}" | base64 -d > "$$POLICY_FILE"
-                IMAGES=$$(/bin/cat ./$${_SKAFFOLD_PATH}/images.txt)
-                for IMAGE in $$IMAGES; do
-                  DIGEST_FILENAME=$$(/bin/echo "$$IMAGE" | /bin/sed 's/.*@sha256://').digest
-                  IMAGE_DIGEST=$$(/bin/cat "./$${_SKAFFOLD_PATH}/$$DIGEST_FILENAME")
-                  /kritis/signer \
-                    -v=10 \
-                    -alsologtostderr \
-                    -image="$$IMAGE_DIGEST" \
-                    -policy="$$POLICY_FILE" \
-                    -kms_key_name="$${_KMS_KEY_NAME}" \
-                    -kms_digest_alg="$${_KMS_DIGEST_ALG}" \
-                    -note_name="$${_NOTE_NAME}"
-                done
-                rm -f "$$POLICY_FILE"
-              EOT
+              file("${path.module}/scripts/vulnsign.sh.template")
             ]
             env = []
             # go/keep-sorted end
@@ -143,7 +133,7 @@ locals {
         try(google_clouddeploy_delivery_pipeline.continuous_delivery[app_source_config.name].name, "") == "" ? [] : [
           # Creates a Cloud Deploy release from the built artifacts.
           {
-            # go/keep-sorted start prefix_order=id,name,wait_for,allow_failure,dir,entrypoint,args
+            # go/keep-sorted start prefix_order=id,name,wait_for,allow_failure,dir,entrypoint,args block=yes
             id            = "createRelease"
             name          = "gcr.io/google.com/cloudsdktool/cloud-sdk:$${_GCLOUD_IMAGE_TAG}"
             wait_for      = [local.use_binary_authorization ? "vulnsign" : "fetchImageDigest"]
@@ -152,26 +142,19 @@ locals {
             entrypoint    = "/bin/sh"
             args = [
               "-c",
-              <<-EOT
-                gcloud deploy releases create "rel-$${SHORT_SHA}" \
-                  --delivery-pipeline="$${_PIPELINE_NAME}" \
-                  --build-artifacts="$${_SKAFFOLD_OUTPUT}" \
-                  --labels="commit-sha=$COMMIT_SHA,commit-short-sha=$SHORT_SHA,commitId=$REVISION_ID,gcb-build-id=$BUILD_ID" \
-                  --annotations="commit-sha=$COMMIT_SHA,commit-short-sha=$SHORT_SHA,commitId=$REVISION_ID,gcb-build-id=$BUILD_ID" \
-                  --region="$${_REGION}" \
-                  --deploy-parameters="commit-sha=$COMMIT_SHA,commit-short-sha=$SHORT_SHA,commitId=$REVISION_ID,gcb-build-id=$BUILD_ID,namespace=$${_NAMESPACE}"
-              EOT
+              file("${path.module}/scripts/create_release.sh.template")
             ]
             env = []
             # go/keep-sorted end
           }
         ]
       )
-      timeout = format("%ds", coalesce(try(app_source_config.config.build.timeout_seconds, null), var.build_timeout_default_seconds))
+      timeout          = format("%ds", coalesce(try(app_source_config.config.build.timeout_seconds, null), var.build_timeout_default_seconds))
+      has_review_agent = try(app_source_config.config.agents["pre-build"]["review"].enabled, false)
       options = {
         requested_verify_option = "VERIFIED"
         logging                 = "CLOUD_LOGGING_ONLY"
-        machine_type            = coalesce(try(app_source_config.config.build.machine_type, null), var.build_machine_type_default)
+        machine_type            = coalesce(try(app_source_config.config.build.machine_type, null), var.build_machine_type_default, "UNSPECIFIED")
         worker_pool             = var.cloud_build_peered_network != null ? google_cloudbuild_worker_pool.ci_pool[0].id : null
       }
     }
@@ -184,6 +167,8 @@ locals {
       "${local.app_skaffold_paths[app_name]}/**",
     ]
   }
+
+  ci_runner_image = "${local.artifact_registry_repository_uri}/build-runner:latest"
 
   # Cloud Build substitutions for each app/source combination.
   # Includes details like path to the skaffold.yaml file, image tags, KMS keys, and pipeline names.
@@ -242,15 +227,16 @@ module "service_account_cloud_build" {
   display_name = "Cloud Build Service Account"
   description  = "Terraform-managed."
   iam_project_roles = {
-    (local.build_project_id) : [
+    (local.build_project_id) : concat([
       # go/keep-sorted start
       "roles/cloudbuild.builds.builder",
       "roles/clouddeploy.releaser",
       "roles/containeranalysis.notes.attacher",
       "roles/containeranalysis.notes.occurrences.viewer",
       "roles/containeranalysis.occurrences.editor",
+      "roles/logging.logWriter",
       # go/keep-sorted end
-    ],
+    ], local.needs_agent_platform_access ? ["roles/aiplatform.user"] : [])
   }
 }
 
@@ -332,7 +318,7 @@ resource "google_cloudbuild_trigger" "ci_pipeline" {
       for_each = each.value.steps
 
       content {
-        # go/keep-sorted start prefix_order=id,name,wait_for,allow_failure,dir,entrypoint,args,env
+        # go/keep-sorted start prefix_order=id,name,wait_for,allow_failure,dir,entrypoint,args,env block=yes
         id            = step.value.id
         name          = step.value.name
         wait_for      = step.value.wait_for
@@ -341,10 +327,37 @@ resource "google_cloudbuild_trigger" "ci_pipeline" {
         entrypoint    = step.value.entrypoint
         args          = step.value.args
         env           = step.value.env
+        secret_env    = try(step.value.secret_env, [])
         # go/keep-sorted end
       }
     }
+
+    dynamic "available_secrets" {
+      for_each = length(local.ci_apps_available_secrets[each.key]) > 0 ? [1] : []
+      content {
+        dynamic "secret_manager" {
+          for_each = local.ci_apps_available_secrets[each.key]
+          content {
+            version_name = secret_manager.value.version_name
+            env          = secret_manager.value.env
+          }
+        }
+      }
+    }
+
     timeout = each.value.timeout
+
+    dynamic "artifacts" {
+      for_each = each.value.has_review_agent ? [1] : []
+
+      content {
+        objects {
+          location = "gs://${google_storage_bucket.cloudbuild_source.name}/reports/${each.value.name}/$${BUILD_ID}/"
+          paths    = ["report.md"]
+        }
+      }
+    }
+
     options {
       requested_verify_option = each.value.options.requested_verify_option
       logging                 = each.value.options.logging
@@ -362,3 +375,59 @@ resource "google_cloudbuild_trigger" "ci_pipeline" {
     ]
   }
 }
+
+# Dedicated GCS bucket to store Cloud Build source archives
+resource "google_storage_bucket" "cloudbuild_source" {
+  project                     = local.build_project_id
+  name                        = "${local.prefix}cloudbuild-source-${local.build_project_id}"
+  location                    = var.cloud_build_region
+  uniform_bucket_level_access = true
+
+  # Auto-delete source archives after 7 days to prevent GCS storage bloat
+  lifecycle_rule {
+    action {
+      type = "Delete"
+    }
+    condition {
+      age = var.build_source_retention_days
+    }
+  }
+}
+
+# Grant storage object admin permission to the custom Cloud Build service account
+# on the staging bucket to allow it to read sources and write execution logs (Least Privilege)
+resource "google_storage_bucket_iam_member" "cloudbuild_source_admin" {
+  bucket = google_storage_bucket.cloudbuild_source.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${module.service_account_cloud_build.email}"
+}
+
+# Bootstrap the build-runner image
+resource "null_resource" "build_bootstrap_runner" {
+  triggers = {
+    # Re-run the build if any file inside the build-runner directory changes
+    runner_source_sha = sha256(join("", [
+      for f in fileset("${path.module}/../../../apps/build-runner", "**") : filesha256("${path.module}/../../../apps/build-runner/${f}")
+    ]))
+  }
+
+  provisioner "local-exec" {
+    command = <<EOT
+      gcloud builds submit \
+        --tag ${local.artifact_registry_repository_uri}/build-runner:latest \
+        --project ${local.build_project_id} \
+        --region ${var.cloud_build_region} \
+        --service-account "projects/${local.build_project_id}/serviceAccounts/${module.service_account_cloud_build.email}" \
+        --gcs-source-staging-dir "gs://${google_storage_bucket.cloudbuild_source.name}/source" \
+        --gcs-log-dir "gs://${google_storage_bucket.cloudbuild_source.name}/logs" \
+        --timeout 1200s \
+        ${path.module}/../../../apps/build-runner
+    EOT
+  }
+
+  depends_on = [
+    module.docker_artifact_registry,
+    google_storage_bucket_iam_member.cloudbuild_source_admin,
+  ]
+}
+

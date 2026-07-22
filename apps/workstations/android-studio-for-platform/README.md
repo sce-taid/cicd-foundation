@@ -53,7 +53,7 @@ This image supports and propagates all base arguments, including:
 
 - **[Design Document](./docs/design.md)**: Deep-dive into the layering, hook-based integration logic, and Cuttlefish setup.
 - **[Technical Requirements](./docs/requirements.md)**: Functional and non-functional requirements for the ASfP layer.
-- **[System Overview](../../../docs/system_overview.md)**: High-level map of the entire Cloud Workstations Custom Image blueprint stack.
+- **[System Overview & Design](../../../docs/workstations/design.md)**: High-level map of the entire Cloud Workstations Custom Image blueprint stack.
 - **[Software Bill of Materials](./docs/software_bill_of_materials.md)**: Details on the packages and versions included in this image.
 - **[Base Blueprint Docs](../gnome/docs/design.md)**: Deep-dives into the underlying systemd orchestrations and networking handover logic.
 
@@ -137,4 +137,4 @@ This image supports and propagates all base arguments, including:
     terraform apply
     ```
 
-For more information have a look at the **[Infrastructure & Deployment Guide](../../../docs/deployment_guide.md)**.
+For more information have a look at the **[Infrastructure & Deployment Guide](../../../docs/iac/admin_guide.md)**.

@@ -20,41 +20,48 @@ limitations under the License.
 
 ## ✨ Features
 
-*   **Terminal Mode**: Character-perfect grid alignment, theme detection (light/dark), and interactive navigation.
-*   **Web Mode**: Responsive design with auto-scaling font sizes to fit any screen, built with Vite and Vanilla JS.
-*   **Single Source of Truth**: Content is authored once in Markdown (`slides/*.md`) and rendered identically in both environments.
-*   **Internationalization (i18n)**: Full support for UN languages (Arabic, Chinese, English, French, Russian, Spanish) dynamically toggled at runtime.
-*   **Hyperlink Support**: Native OSC 8 sequences for terminal links and standard HTML links for the web.
+- **Terminal Mode**: Character-perfect grid alignment, theme detection (light/dark), and interactive navigation.
+- **Web Mode**: Responsive design with auto-scaling font sizes to fit any screen, built with Vite and Vanilla JS.
+- **Single Source of Truth**: Content is authored once in Markdown (`slides/*.md`) and rendered identically in both environments.
+- **Internationalization (i18n)**: Full support for UN languages (Arabic, Chinese, English, French, Russian, Spanish) dynamically toggled at runtime.
+- **Hyperlink Support**: Native OSC 8 sequences for terminal links and standard HTML links for the web.
 
 ## 🛠 Prerequisites
 
 ### For Terminal Mode
-*   **[gum](https://github.com/charmbracelet/gum)** (v0.14.0 or later recommended): Used for formatting and UI components.
-*   **bash** (v4.0 or later).
-*   **Node.js** (v18 or later): Required to generate locales on first run or when translations change.
+
+- **[gum](https://github.com/charmbracelet/gum)** (v0.14.0 or later recommended): Used for formatting and UI components.
+- **bash** (v4.0 or later).
+- **Node.js** (v18 or later): Required to generate locales on first run or when translations change.
 
 ### For Web Mode
-*   **Node.js** (v18 or later) & **npm**.
+
+- **Node.js** (v18 or later) & **npm**.
 
 ## 🚀 Getting Started
 
 ### Terminal Presentation
+
 Simply run the presentation script (defaults to the `slides/` directory):
+
 ```bash
 ./bin/md2tty.sh
 ```
 
 To present a different set of slides:
+
 ```bash
 ./bin/md2tty.sh path/to/your/slides/
 ```
 
 To forcefully override the system language:
+
 ```bash
 ./bin/md2tty.sh --lang fr
 ```
 
 ### Web Presentation
+
 1.  **Install dependencies**:
     ```bash
     npm install
@@ -79,41 +86,43 @@ To forcefully override the system language:
 
 ## ⌨️ Shortcuts
 
-| Key | Action |
-| :--- | :--- |
-| `j`, `n`, `s`, `→` | Next Slide |
-| `k`, `p`, `w`, `←` | Previous Slide |
-| `1`-`9` | Jump to Slide |
-| `t` | Toggle Theme (Light/Dark) |
-| `f` | Toggle Slide Transition Flash (Web only) |
-| `l` | Toggle Language |
-| `h`, `?` | Help |
-| `q` | Quit |
+| Key                | Action                                   |
+| :----------------- | :--------------------------------------- |
+| `j`, `n`, `s`, `→` | Next Slide                               |
+| `k`, `p`, `w`, `←` | Previous Slide                           |
+| `1`-`9`            | Jump to Slide                            |
+| `t`                | Toggle Theme (Light/Dark)                |
+| `f`                | Toggle Slide Transition Flash (Web only) |
+| `l`                | Toggle Language                          |
+| `h`, `?`           | Help                                     |
+| `q`                | Quit                                     |
 
 ## 🌍 Updating Translations (i18n)
 
 The `md2tty` suite dynamically supports multiple languages across both engines.
 
 To add or update translations:
+
 1. Edit the respective JSON files located in `locales/*.json` (e.g. `locales/es.json`).
 2. Run the manifest generator to automatically transpile the JSON files into Bash associative arrays (`locales/*.sh`) and stage them for the web viewer:
    ```bash
    npm run generate-manifest
    ```
-*Note: The generated `locales/*.sh` arrays are treated as build artifacts and are excluded from version control.*
+   _Note: The generated `locales/_.sh` arrays are treated as build artifacts and are excluded from version control.\*
 
 ## 📂 Project Structure
 
-*   **`slides/`**: Source Markdown files. This is your content source of truth.
-*   **`src/`**: Web application logic (Vanilla JS).
-*   **`styles/`**: Web application styling (CSS).
-*   **`bin/`**: CLI tools and presentation scripts.
-*   **`scripts/`**: Build and manifest generation scripts.
-*   `tests/`: Unit and integration tests (BATS & Vitest).
-*   **`docs/`**: Technical documentation, including [Requirements](docs/requirements.md) and [Design](docs/design.md).
-*   `public/`: Static assets and generated staging files.
+- **`slides/`**: Source Markdown files. This is your content source of truth.
+- **`src/`**: Web application logic (Vanilla JS).
+- **`styles/`**: Web application styling (CSS).
+- **`bin/`**: CLI tools and presentation scripts.
+- **`scripts/`**: Build and manifest generation scripts.
+- `tests/`: Unit and integration tests (BATS & Vitest).
+- **`docs/`**: Technical documentation, structured by product domain (e.g. `docs/iac/design.md`, `docs/workstations/requirements.md`).
+- `public/`: Static assets and generated staging files.
 
-*   **`dist/`**: Minified production build output.
+- **`dist/`**: Minified production build output.
 
 ## 📄 License
+
 Copyright 2026 Google LLC. Licensed under the Apache License, Version 2.0.

@@ -1,8 +1,76 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# ==========================================
+# OS & Editor Templates
+# ==========================================
+# go/keep-sorted start
+*.swp
 *~
+.DS_Store
+.history/
+.idea/
+.vscode/
+# go/keep-sorted end
+
+# ==========================================
+# Local Environments & Secrets
+# ==========================================
+# go/keep-sorted start
+*secret*
 .env
+.env.local
 .gemini/
 .gitseep.yaml
+# go/keep-sorted end
+
+# ==========================================
+# Infrastructure (Terraform)
+# ==========================================
+# go/keep-sorted start
+*.tfstate
+*.tfstate.backup
+*.tfvars
+*.tfvars.json
+*_override.tf
+*_override.tf.json
+.terraform.lock.hcl
 .terraform/
-__pycache__
+# go/keep-sorted end
+
+# ==========================================
+# Python Development & Testing
+# ==========================================
+# go/keep-sorted start
+*.pyc
+*.pyo
+.coverage
+.pytest_cache/
+.ruff_cache/
+.venv/
+__pycache__/
 coverage.out
+htmlcov/
+# go/keep-sorted end
+
+# ==========================================
+# Node.js & Frontend Assets
+# ==========================================
+# go/keep-sorted start
+.npm/
+dist/
+node_modules/
+npm-debug.log
 reports/
+# go/keep-sorted end

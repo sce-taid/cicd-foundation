@@ -14,17 +14,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# shellcheck disable=SC2329,SC2076
+
 load ../test_helper.bash
 
 setup() {
   export WORKSTATION_USER=user
   export WORKSTATION_UID=1000
 
+  # Setup mock binary directory for command -v checks
+  export BIN_MOCK_DIR="${BATS_FILE_TMPDIR}/bin_mock"
+  command mkdir -p "${BIN_MOCK_DIR}"
+  touch "${BIN_MOCK_DIR}/gnome-keyring-daemon"
+  chmod +x "${BIN_MOCK_DIR}/gnome-keyring-daemon"
+  export PATH="${BIN_MOCK_DIR}:${PATH}"
+
   # Mock common.sh functions
   log() { echo "LOG: $*"; }
   log_event() { echo "LOG_EVENT: $*"; }
   sleep() { echo "MOCK_SLEEP: $*"; }
   export -f log log_event sleep
+
+  # Mock filesystem command utilities
+  chown() { echo "MOCK_CHOWN: $*"; }
+  mkdir() { echo "MOCK_MKDIR: $*"; }
+  rm() { echo "MOCK_RM: $*"; }
+  export -f chown mkdir rm
 
   # Mock external commands used in the runuser block
   runuser() {
@@ -63,7 +78,8 @@ setup() {
         fi
       }
       sleep() { echo "sleep $*"; }
-      export -f gsettings gnome-extensions sleep
+      gnome-keyring-daemon() { echo "gnome-keyring-daemon $*"; }
+      export -f gsettings gnome-extensions sleep gnome-keyring-daemon
       eval "$MOCK_CMD_STRING"
     ' bash "${positional_args[@]}"
   }

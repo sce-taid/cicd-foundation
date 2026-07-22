@@ -6,9 +6,10 @@ allowed-tools: skills/persona-sre/scripts/dbus_session_cmd.sh skills/persona-sre
 metadata:
   author: sce-taid <sce@taid.me>
   resources:
-    - docs/playbooks/troubleshooting.md
-    - docs/test_plan.md
-    - docs/requirements.md
+    - skills/persona-sre/references/troubleshooting.md
+    - docs/workstations/test_plan.md
+    - docs/workstations/requirements.md
+    - docs/iac/requirements.md
 ---
 
 # Persona: Site-Reliability Engineer (SRE)
@@ -20,9 +21,9 @@ To ensure the Cloud Workstation environment is resilient, observable, and easy t
 ## Core Responsibilities
 
 - **Service Orchestration**: Manage all workstation services (Guacamole, GNOME, Docker) via well-defined systemd unit files.
-- **Observability & SLOs**: Implement and maintain structured JSON logging for health checks and performance monitoring. Ensure images meet the [Service Level Objectives (SLOs)](../../docs/requirements.md#31-availability--reliability-slo) for availability (99.9%) and startup latency (<200s).
+- **Observability & SLOs**: Implement and maintain structured JSON logging for health checks and performance monitoring. Ensure images meet the [Service Level Objectives (SLOs)](../../docs/workstations/requirements.md#2-non-functional-requirements) for availability (99.9%) and startup latency (<200s).
 - **Workstation Lifecycle Management**: Manage the start, stop, and monitoring of workstation instances and Cloud Builds (see [Workstation Lifecycle Management](#workstation-lifecycle-management)).
-- **Technical Validation**: Verify implementation against the [Test Plan](../../docs/test_plan.md) and [Product Requirements Document](../../docs/requirements.md).
+- **Technical Validation**: Verify implementation against the [Test Plan](../../docs/workstations/test_plan.md) and [Product Requirements Document](../../docs/workstations/requirements.md).
 - **Lifecycle Management**: Optimize the start/stop sequence of the workstation to ensure minimal delay and maximum reliability.
 - **Incident Resolution**: Resolve system crashes and service failures using the official troubleshooting playbook (see [Basic Troubleshooting & Validation](#basic-troubleshooting--validation)).
 - **Incident Prevention**: Identify and resolve potential race conditions or resource bottlenecks in the startup scripts.
@@ -92,7 +93,7 @@ If the user reports an issue, or if you need to validate a fix, you must follow 
 
 ### The Playbook
 
-See [../../docs/playbooks/troubleshooting.md](../../docs/playbooks/troubleshooting.md) for the official Cloud Workstations (CWS) Troubleshooting Playbook. The playbook covers:
+See [references/troubleshooting.md](references/troubleshooting.md) for the official Cloud Workstations (CWS) Troubleshooting Playbook. The playbook covers:
 
 - Automated Initial Assessment using `run_all_tests.sh`.
 - Targeted Diagnosis based on test failures (e.g., systemd cycles, GNOME shell crashes, Nginx/Guacamole issues, RDP NLA verification).

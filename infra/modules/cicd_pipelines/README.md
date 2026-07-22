@@ -1,3 +1,19 @@
+<!--
+Copyright 2026 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 # Terraform Module for CI/CD pipelines (`cicd_pipelines`)
 
 This module provisions a secure CI/CD environment on Google Cloud Platform using
@@ -5,48 +21,48 @@ Google Cloud-native services.
 
 It sets up the necessary infrastructure for:
 
-*   **Source Code Management**: Choose between
-    [Secure Source Manager](https://cloud.google.com/secure-source-manager/docs/overview)
-    or [GitHub](https://github.com) for source code hosting and CI triggers.
-*   **Continuous Integration**:
-    [Cloud Build](https://cloud.google.com/build/docs/overview) pipelines for
-    building and testing applications.
-*   **Artifact Management**:
-    [Artifact Registry](https://cloud.google.com/artifact-registry/docs/overview)
-    for storing and managing Docker container images.
-*   **Continuous Deployment**:
-    [Cloud Deploy](https://cloud.google.com/deploy/docs/overview) pipelines for
-    deploying applications to various runtimes like Cloud Run, GKE, or Cloud
-    Workstations.
-*   **Security**:
-    *   [Binary Authorization](https://cloud.google.com/binary-authorization/docs/overview)
-        to ensure only trusted container images are deployed.
-    *   Vulnerability scanning and attestation using
-        [Kritis Signer](https://github.com/grafeas/kritis).
-    *   [Key Management Service](https://cloud.google.com/kms/docs/key-management-service) for
-        managing signing keys.
-    *   [Secret Manager](https://cloud.google.com/secret-manager/docs/overview)
-        for managing secrets like webhook keys.
-*   **Automation**:
-    [Cloud Scheduler](https://cloud.google.com/scheduler/docs/overview) for
-    triggering periodic builds (e.g., for Cloud Workstations image patching).
+- **Source Code Management**: Choose between
+  [Secure Source Manager](https://cloud.google.com/secure-source-manager/docs/overview)
+  or [GitHub](https://github.com) for source code hosting and CI triggers.
+- **Continuous Integration**:
+  [Cloud Build](https://cloud.google.com/build/docs/overview) pipelines for
+  building and testing applications.
+- **Artifact Management**:
+  [Artifact Registry](https://cloud.google.com/artifact-registry/docs/overview)
+  for storing and managing Docker container images.
+- **Continuous Deployment**:
+  [Cloud Deploy](https://cloud.google.com/deploy/docs/overview) pipelines for
+  deploying applications to various runtimes like Cloud Run, GKE, or Cloud
+  Workstations.
+- **Security**:
+  - [Binary Authorization](https://cloud.google.com/binary-authorization/docs/overview)
+    to ensure only trusted container images are deployed.
+  - Vulnerability scanning and attestation using
+    [Kritis Signer](https://github.com/grafeas/kritis).
+  - [Key Management Service](https://cloud.google.com/kms/docs/key-management-service) for
+    managing signing keys.
+  - [Secret Manager](https://cloud.google.com/secret-manager/docs/overview)
+    for managing secrets like webhook keys.
+- **Automation**:
+  [Cloud Scheduler](https://cloud.google.com/scheduler/docs/overview) for
+  triggering periodic builds (e.g., for Cloud Workstations image patching).
 
 ## Features
 
-*   **Flexible Source Control**: Supports both Secure Source Manager and GitHub
-    for triggering builds on code push.
-*   **Multiple Runtimes**: Supports deployments to Cloud Run, GKE, or Cloud
-    Workstations via Cloud Deploy.
-*   **Multi-Stage Deployments**: Define multiple deployment stages (e.g., dev,
-    test, prod) with optional manual approvals between stages.
-*   **Canary Deployments**: Supports canary deployment strategies for GKE targets.
-*   **Vulnerability Scanning**: Integrates Kritis Signer for vulnerability
-    scanning and creating Binary Authorization attestations during the build
-    process.
-*   **Customizable Builds**: Configure build machine types, timeouts, and
-    dedicated worker pools via input variables.
-*   **Cloud Workstations**: Includes support for scheduled rebuilding of Cloud
-    Workstations base images to incorporate security patches.
+- **Flexible Source Control**: Supports both Secure Source Manager and GitHub
+  for triggering builds on code push.
+- **Multiple Runtimes**: Supports deployments to Cloud Run, GKE, or Cloud
+  Workstations via Cloud Deploy.
+- **Multi-Stage Deployments**: Define multiple deployment stages (e.g., dev,
+  test, prod) with optional manual approvals between stages.
+- **Canary Deployments**: Supports canary deployment strategies for GKE targets.
+- **Vulnerability Scanning**: Integrates Kritis Signer for vulnerability
+  scanning and creating Binary Authorization attestations during the build
+  process.
+- **Customizable Builds**: Configure build machine types, timeouts, and
+  dedicated worker pools via input variables.
+- **Cloud Workstations**: Includes support for scheduled rebuilding of Cloud
+  Workstations base images to incorporate security patches.
 
 ## Usage
 
@@ -55,7 +71,7 @@ Below is a basic usage example deploying a Cloud Run application named
 
 ```terraform
 module "cicd_pipelines" {
-  source = "github.com/GoogleCloudPlatform/cicd-foundation//infra/modules/cicd_pipelines?ref=v5.0.1"
+  source = "github.com/GoogleCloudPlatform/cicd-foundation//infra/modules/cicd_pipelines?ref=v6.0.0"
 
   project_id = "your-gcp-project-id"
   namespace  = "my-app"
@@ -94,8 +110,8 @@ Ensure the identity running Terraform has sufficient permissions on the target p
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_apps"></a> [apps](#input\_apps) | Map of applications to be deployed. Keys are application names, values configure<br/>  build, runtime, and stage-specific parameters. The `stages` attribute is a map<br/>  where keys are stage names (e.g., 'dev', 'prod'). The value for each stage is<br/>  another map, where keys are used Cloud Deploy tags in the respective pipelines. | <pre>map(object({<br/>    build = optional(object({<br/>      # The relative path to the directory containing skaffold.yaml within the<br/>      # repository.<br/>      skaffold_path = optional(string)<br/>      # The timeout for the build in seconds.<br/>      timeout_seconds = optional(number)<br/>      # The machine type to use for the build.<br/>      machine_type = optional(string)<br/>      env          = optional(map(string), {})<br/>      })<br/>    )<br/>    runtime = optional(string, "cloudrun"),<br/>    stages  = optional(map(map(string))),<br/>    git_repo = optional(object({<br/>      url    = string<br/>      branch = string<br/>    })),<br/>    github = optional(object({<br/>      owner          = string<br/>      repo           = string<br/>      branch_pattern = string<br/>    })),<br/>    ssm = optional(object({<br/>      instance_id = string<br/>      repo_name   = string<br/>      branch      = string<br/>    })),<br/>    workstation_config = optional(object({<br/>      # The region to use for the Cloud Scheduler job.<br/>      scheduler_region = optional(string)<br/>      # The schedule for the Cloud Scheduler job in cron format (e.g., "0 1 * * *")<br/>      ci_schedule = optional(string)<br/>      paused      = optional(bool, false)<br/>    }))<br/>  }))</pre> | `{}` | no |
+|------|-------------|------|---------|:--------:|
+| <a name="input_apps"></a> [apps](#input\_apps) | Map of applications to be deployed. Keys are application names, values configure<br/>  build, runtime, and stage-specific parameters. The `stages` attribute is a map<br/>  where keys are stage names (e.g., 'dev', 'prod'). The value for each stage is<br/>  another map, where keys are used Cloud Deploy tags in the respective pipelines. | <pre>map(object({<br/>    build = optional(object({<br/>      # The relative path to the directory containing skaffold.yaml within the<br/>      # repository.<br/>      skaffold_path = optional(string)<br/>      # The timeout for the build in seconds.<br/>      timeout_seconds = optional(number)<br/>      # The machine type to use for the build.<br/>      machine_type = optional(string)<br/>      env          = optional(map(string), {})<br/>      })<br/>    )<br/>    runtime = optional(string),<br/>    stages  = optional(map(map(string))),<br/>    git_repo = optional(object({<br/>      url    = string<br/>      branch = string<br/>    })),<br/>    github = optional(object({<br/>      owner          = string<br/>      repo           = string<br/>      branch_pattern = string<br/>    })),<br/>    ssm = optional(object({<br/>      instance_id = string<br/>      repo_name   = string<br/>      branch      = string<br/>    })),<br/>    workstation_config = optional(object({<br/>      # The region to use for the Cloud Scheduler job.<br/>      scheduler_region = optional(string)<br/>      # The schedule for the Cloud Scheduler job in cron format (e.g., "0 1 * * *")<br/>      ci_schedule = optional(string)<br/>      paused      = optional(bool, false)<br/>    }))<br/>    agents = optional(map(map(object({<br/>      enabled       = optional(bool, false)<br/>      model         = optional(string)<br/>      location      = optional(string)<br/>      personas      = optional(list(string))<br/>      instructions  = optional(string)<br/>      prompt        = optional(string)<br/>      allow_failure = optional(bool, true)<br/>    }))), {})<br/>  }))</pre> | `{}` | no |
 | <a name="input_apps_directory"></a> [apps\_directory](#input\_apps\_directory) | The root directory for applications in the repository. This is used to construct the path to an application's source code if `skaffold_path` is not specified. | `string` | `"apps"` | no |
 | <a name="input_artifact_registry_id"></a> [artifact\_registry\_id](#input\_artifact\_registry\_id) | The ID of an existing Docker Artifact Registry to use. If null, a new one will be created. | `string` | `null` | no |
 | <a name="input_artifact_registry_name"></a> [artifact\_registry\_name](#input\_artifact\_registry\_name) | The name of the Artifact Registry repository to create if artifact\_registry\_id is null. | `string` | `"cicd-foundation"` | no |
@@ -103,6 +119,7 @@ Ensure the identity running Terraform has sufficient permissions on the target p
 | <a name="input_artifact_registry_region"></a> [artifact\_registry\_region](#input\_artifact\_registry\_region) | The region to use for Artifact Registry resources. | `string` | `"us-central1"` | no |
 | <a name="input_binary_authorization_always_create"></a> [binary\_authorization\_always\_create](#input\_binary\_authorization\_always\_create) | If true, create Binary Authorization resources even if kritis\_signer\_image is not provided. | `bool` | `false` | no |
 | <a name="input_build_machine_type_default"></a> [build\_machine\_type\_default](#input\_build\_machine\_type\_default) | The default machine type to use for Cloud Build jobs. | `string` | `"UNSPECIFIED"` | no |
+| <a name="input_build_source_retention_days"></a> [build\_source\_retention\_days](#input\_build\_source\_retention\_days) | The number of days to retain Cloud Build source archives in the GCS staging bucket before deletion. | `number` | `7` | no |
 | <a name="input_build_timeout_default_seconds"></a> [build\_timeout\_default\_seconds](#input\_build\_timeout\_default\_seconds) | The default timeout in seconds for Cloud Build jobs. | `number` | `7200` | no |
 | <a name="input_canary_route_update_wait_time_seconds"></a> [canary\_route\_update\_wait\_time\_seconds](#input\_canary\_route\_update\_wait\_time\_seconds) | The time (in seconds) to wait for network route updates during GKE canary deployments. | `number` | `60` | no |
 | <a name="input_canary_verify"></a> [canary\_verify](#input\_canary\_verify) | Whether to enable verification steps for canary deployments in Cloud Deploy. | `bool` | `true` | no |
@@ -117,6 +134,11 @@ Ensure the identity running Terraform has sufficient permissions on the target p
 | <a name="input_cws_image_build_runner_role_create"></a> [cws\_image\_build\_runner\_role\_create](#input\_cws\_image\_build\_runner\_role\_create) | Whether to create the custom IAM role for the Cloud Workstation Image Build Runner. If false, the role is expected to exist. | `bool` | `true` | no |
 | <a name="input_cws_image_build_runner_role_id"></a> [cws\_image\_build\_runner\_role\_id](#input\_cws\_image\_build\_runner\_role\_id) | The role\_id for the custom IAM role for the Cloud Workstation Image Build Runner. | `string` | `"cwsBuildRunner"` | no |
 | <a name="input_cws_image_build_runner_role_title"></a> [cws\_image\_build\_runner\_role\_title](#input\_cws\_image\_build\_runner\_role\_title) | The title for the custom IAM role for the Cloud Workstation Image Build Runner. | `string` | `"Cloud Workstation Image Build Runner"` | no |
+| <a name="input_default_agentic_instructions"></a> [default\_agentic\_instructions](#input\_default\_agentic\_instructions) | The default system instructions passed to the agent to define its behavior. | `string` | `"You are an automated platform review agent. Adopt the requested personas to audit the workspace codebase changes."` | no |
+| <a name="input_default_agentic_location"></a> [default\_agentic\_location](#input\_default\_agentic\_location) | The default Agent Platform endpoint location for the agentic review models. | `string` | `"global"` | no |
+| <a name="input_default_agentic_model"></a> [default\_agentic\_model](#input\_default\_agentic\_model) | The default Gemini model used for the agentic review (e.g., 'gemini-3.5-flash'). | `string` | `"gemini-3.5-flash"` | no |
+| <a name="input_default_agentic_personas"></a> [default\_agentic\_personas](#input\_default\_agentic\_personas) | The default list of persona profiles to run during the automated review (e.g., 'swe', 'security'). | `list(string)` | <pre>[<br/>  "swe",<br/>  "security"<br/>]</pre> | no |
+| <a name="input_default_agentic_prompt"></a> [default\_agentic\_prompt](#input\_default\_agentic\_prompt) | The default prompt passed to each persona reviewer. | `string` | `"Analyze the modified files in the workspace. Audit the code against your persona's mandates and guidelines, highlighting any issues or improvements needed."` | no |
 | <a name="input_default_ci_schedule"></a> [default\_ci\_schedule](#input\_default\_ci\_schedule) | The default cron schedule for continuous integration triggers in Cloud Scheduler if not specified in the application config. | `string` | `"0 0 * * *"` | no |
 | <a name="input_deploy_region"></a> [deploy\_region](#input\_deploy\_region) | The region to use for Cloud Deploy resources. | `string` | `"us-central1"` | no |
 | <a name="input_docker_image_tag"></a> [docker\_image\_tag](#input\_docker\_image\_tag) | The tag of the gcr.io/cloud-builders/docker image to use. | `string` | `"20.10.24"` | no |
@@ -164,7 +186,7 @@ Ensure the identity running Terraform has sufficient permissions on the target p
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_artifact_registry_repository"></a> [artifact\_registry\_repository](#output\_artifact\_registry\_repository) | The Artifact Registry repository object. |
 | <a name="output_artifact_registry_repository_uri"></a> [artifact\_registry\_repository\_uri](#output\_artifact\_registry\_repository\_uri) | The URI of the Artifact Registry repository. |
 | <a name="output_binary_authorization_policy_id"></a> [binary\_authorization\_policy\_id](#output\_binary\_authorization\_policy\_id) | The ID of the created Binary Authorization Policy. |

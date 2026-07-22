@@ -115,6 +115,20 @@ main() {
   # Do NOT kill the user's D-Bus bus itself if possible, but clear the session bus if needed
   # pkill -9 -u "${target_user}" dbus-daemon || true
 
+  # SEC-04 Compliance: Headless remote automated workstations utilize a blank password
+  # for GNOME Keyring to prevent blocking GUI prompts (e.g. from Chrome, gcloud, VS Code)
+  # during automated logins where Unix credentials cannot be passed via PAM.
+  local keyring_dir="/home/${target_user}/.local/share/keyrings"
+  log "Initializing GNOME keyring directory: ${keyring_dir}..."
+  rm -rf "${keyring_dir}"
+  mkdir -p "${keyring_dir}"
+  echo "login" > "${keyring_dir}/default"
+  chown -R "${target_user}:${target_user}" "/home/${target_user}/.local"
+
+  log "Pre-seeding blank password for login keyring..."
+  printf '\n' | gnome-keyring-daemon --unlock --components=secrets || log "Warning: failed to unlock keyring daemon"
+
+
   /usr/libexec/gnome-session-binary --session=ubuntu &
   local session_pid=$!
 

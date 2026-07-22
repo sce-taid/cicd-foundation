@@ -41,5 +41,7 @@ resource "google_project_iam_member" "user_roles" {
   member  = each.value.member
 }
 
+# User roles granted at project level
+
 
 

@@ -35,7 +35,6 @@ apply_permissions() {
 
   for path in "${paths[@]}"; do
     if [ -d "${path}" ]; then
-      log "  -> Setting ${mode} on ${path}"
       # Ensure directories are traversable (755)
       chmod 755 "${path}" 2>/dev/null || true
       find "${path}" -type d -exec chmod 755 {} + 2>/dev/null || true

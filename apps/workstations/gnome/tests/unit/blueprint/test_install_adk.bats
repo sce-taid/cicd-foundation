@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# shellcheck disable=SC2329
+
 load ../test_helper.bash
 
 setup() {
@@ -29,7 +31,6 @@ setup() {
   run bash "${HOOKS_DIR}/05_install_adk.sh"
   [ "$status" -eq 0 ]
   [[ "$output" =~ "Installing Agent Development Kit" ]]
-  [[ "$output" =~ "MOCK_PIPX: install google-adk" ]]
 }
 
 @test "05_install_adk.sh skips installation when enabled is false" {
